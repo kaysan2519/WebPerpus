@@ -1,0 +1,254 @@
+// Prisma Schema for PerpusKita Digital Library System
+// Modern Editorial Library Database Architecture
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  LIBRARIAN
+  MEMBER
+}
+
+enum CopyStatus {
+  AVAILABLE
+  BORROWED
+  RESERVED
+  MAINTENANCE
+  LOST
+}
+
+enum LoanStatus {
+  BORROWED
+  RETURNED
+  OVERDUE
+}
+
+enum FineStatus {
+  PENDING
+  PAID
+  WAIVED
+}
+
+model User {
+  id           String        @id @default(cuid())
+  clerkId      String        @unique
+  email        String        @unique
+  name         String
+  avatar       String?
+  role         Role          @default(MEMBER)
+  memberId     String        @unique // e.g. PK-2024-001
+  phone        String?
+  address      String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  loans        Loan[]
+  favorites    Favorite[]
+  reviews      Review[]
+  notifications Notification[]
+  fines        Fine[]
+  activityLogs ActivityLog[]
+
+  @@index([email])
+  @@index([clerkId])
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  books       Book[]
+}
+
+model Author {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  bio       String?  @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  books     Book[]
+}
+
+model Publisher {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  address   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  books     Book[]
+}
+
+model Book {
+  id                  String       @id @default(cuid())
+  googleVolumeId      String?      @unique
+  isbn                String       @unique
+  title               String
+  slug                String       @unique
+  description         String       @db.Text
+  coverImage          String?      @db.Text
+  pages               Int          @default(0)
+  publishYear         Int
+  language            String       @default("id")
+  shelfLocation       String       // e.g. Rak T-04 (Teknologi)
+  isPopular           Boolean      @default(false)
+  isEditorChoice      Boolean      @default(false)
+  previewLink         String?      @db.Text
+  infoLink            String?      @db.Text
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+
+  categoryId          String
+  category            Category     @relation(fields: [categoryId], references: [id])
+
+  authorId            String
+  author              Author       @relation(fields: [authorId], references: [id])
+
+  publisherId         String
+  publisher           Publisher    @relation(fields: [publisherId], references: [id])
+
+  copies              BookCopy[]
+  favorites           Favorite[]
+  reviews             Review[]
+
+  @@index([title])
+  @@index([isbn])
+  @@index([googleVolumeId])
+}
+
+model BookCopy {
+  id           String     @id @default(cuid())
+  bookId       String
+  barcode      String     @unique // e.g. BC-PK-8841-01
+  status       CopyStatus @default(AVAILABLE)
+  condition    String     @default("Baik") // Baik, Rusak Ringan
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  book         Book       @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  loanItems    LoanItem[]
+
+  @@index([bookId])
+  @@index([status])
+}
+
+model Loan {
+  id           String     @id @default(cuid())
+  loanNumber   String     @unique // e.g. LN-202409-001
+  userId       String
+  borrowDate   DateTime   @default(now())
+  dueDate      DateTime
+  returnDate   DateTime?
+  status       LoanStatus @default(BORROWED)
+  renewCount   Int        @default(0)
+  notes        String?    @db.Text
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  user         User       @relation(fields: [userId], references: [id])
+  items        LoanItem[]
+  fine         Fine?
+
+  @@index([userId])
+  @@index([status])
+}
+
+model LoanItem {
+  id         String   @id @default(cuid())
+  loanId     String
+  bookCopyId String
+  createdAt  DateTime @default(now())
+
+  loan       Loan     @relation(fields: [loanId], references: [id], onDelete: Cascade)
+  bookCopy   BookCopy @relation(fields: [bookCopyId], references: [id])
+
+  @@index([loanId])
+  @@index([bookCopyId])
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  bookId    String
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book      Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, bookId])
+  @@index([userId])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  userId    String
+  bookId    String
+  rating    Int      // 1 to 5
+  comment   String   @db.Text
+  likes     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book      Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@index([bookId])
+  @@index([userId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  message   String   @db.Text
+  isRead    Boolean  @default(false)
+  type      String   @default("INFO") // INFO, DUE_REMINDER, OVERDUE, RENEW
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Fine {
+  id        String     @id @default(cuid())
+  loanId    String     @unique
+  userId    String
+  amount    Decimal    @db.Decimal(10, 2)
+  status    FineStatus @default(PENDING)
+  paidAt    DateTime?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  loan      Loan       @relation(fields: [loanId], references: [id])
+  user      User       @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+model ActivityLog {
+  id          String   @id @default(cuid())
+  userId      String?
+  action      String   // BORROW, RETURN, IMPORT_BOOK, CREATE_MEMBER
+  description String   @db.Text
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([createdAt])
+}
