@@ -17,16 +17,20 @@ import {
   Heart, 
   LogOut, 
   ChevronDown,
-  Sparkles
+  Sparkles,
+  Bell
 } from 'lucide-react';
+import { NotificationModal } from '@/components/layout/NotificationModal';
 
 export function Navbar() {
   const pathname = usePathname();
-  const { currentUser, switchUserRole, setSearchQuery, books } = useLibrary();
+  const { currentUser, switchUserRole, setSearchQuery, books, unreadNotificationsCount } = useLibrary();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [searchModalOpen, setSearchModalOpen] = useState(false);
+  const [notificationModalOpen, setNotificationModalOpen] = useState(false);
   const [navSearchInput, setNavSearchInput] = useState('');
+
 
   const navLinks = [
     { label: 'Beranda', href: '/' },
@@ -88,6 +92,22 @@ export function Navbar() {
             >
               <Search className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
+
+            {/* Notification Bell Button */}
+            <button
+              onClick={() => setNotificationModalOpen(true)}
+              className="relative p-2 text-[#777D77] hover:text-[#174C3C] hover:bg-[#E7EDE5]/60 rounded-full transition-colors"
+              aria-label="Notifikasi"
+              title="Pusat Notifikasi"
+            >
+              <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
+              {unreadNotificationsCount > 0 && (
+                <span className="absolute top-1 right-1 w-4 h-4 rounded-full bg-[#174C3C] text-white text-[10px] font-bold flex items-center justify-center animate-pulse">
+                  {unreadNotificationsCount}
+                </span>
+              )}
+            </button>
+
 
             {/* Quick Persona Switcher for Evaluation */}
             <div className="relative">
@@ -383,6 +403,13 @@ export function Navbar() {
           </div>
         </div>
       )}
+
+      {/* Notification Modal */}
+      <NotificationModal
+        isOpen={notificationModalOpen}
+        onClose={() => setNotificationModalOpen(false)}
+      />
     </>
   );
 }
+

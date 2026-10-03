@@ -1,4 +1,14 @@
-import { Book, LoanRecord, Review, ActivityItem } from '@/types';
+import { 
+  Book, 
+  LoanRecord, 
+  Review, 
+  ActivityItem, 
+  FineRecord, 
+  NotificationItem, 
+  MemberRecord, 
+  CategoryRecord, 
+  LibrarySettings 
+} from '@/types';
 
 export const INITIAL_BOOKS: Book[] = [
   {
@@ -417,3 +427,171 @@ export const LOAN_CHART_DATA = [
   { day: '28 Sep', count: 40 },
   { day: '30 Sep', count: 36 }
 ];
+
+export const INITIAL_FINES: FineRecord[] = [
+  {
+    id: 'fine-1',
+    loanId: 'loan-2',
+    userId: 'u-1',
+    userName: 'Kaysan Rafif',
+    bookTitle: 'Python untuk Pemula',
+    amount: 5000,
+    status: 'Belum Dibayar',
+    dueDate: '24 Sep 2024',
+    daysOverdue: 5,
+    createdAt: '25 Sep 2024'
+  },
+  {
+    id: 'fine-2',
+    loanId: 'loan-old-1',
+    userId: 'u-2',
+    userName: 'Dewi Lestari',
+    bookTitle: 'Sapiens: Riwayat Singkat Umat Manusia',
+    amount: 3000,
+    status: 'Lunas',
+    dueDate: '10 Agu 2024',
+    daysOverdue: 3,
+    createdAt: '11 Agu 2024',
+    paidAt: '14 Agu 2024'
+  }
+];
+
+export const INITIAL_NOTIFICATIONS: NotificationItem[] = [
+  {
+    id: 'notif-1',
+    userId: 'u-1',
+    title: 'Pengingat Batas Pinjaman',
+    message: 'Buku "Laut Bercerita" akan jatuh tempo dalam 3 hari (26 Sep 2024). Segera perpanjang jika masih membutuhkan.',
+    isRead: false,
+    type: 'DUE_REMINDER',
+    createdAt: 'Baru saja',
+    link: '/peminjaman'
+  },
+  {
+    id: 'notif-2',
+    userId: 'u-1',
+    title: 'Peminjaman Melewati Batas',
+    message: 'Buku "Python untuk Pemula" telah melewati jatuh tempo. Harap segera kembalikan ke meja sirkulasi.',
+    isRead: false,
+    type: 'OVERDUE',
+    createdAt: '1 hari yang lalu',
+    link: '/peminjaman'
+  },
+  {
+    id: 'notif-3',
+    userId: 'u-1',
+    title: 'Buku Koleksi Baru Tersedia',
+    message: 'Koleksi baru kategori Teknologi hasil kurasi Google Books API telah masuk rak ekspedisi.',
+    isRead: true,
+    type: 'INFO',
+    createdAt: '3 hari yang lalu',
+    link: '/katalog'
+  },
+  {
+    id: 'notif-4',
+    userId: 'u-1',
+    title: 'Perpanjangan Berhasil',
+    message: 'Perpanjangan buku "Laut Bercerita" telah disetujui selama 7 hari kalender.',
+    isRead: true,
+    type: 'RENEW',
+    createdAt: '5 hari yang lalu',
+    link: '/peminjaman'
+  }
+];
+
+export const INITIAL_MEMBERS: MemberRecord[] = [
+  {
+    id: 'u-1',
+    name: 'Kaysan Rafif',
+    email: 'kaysan.rafif@perpus.sch.id',
+    memberId: 'PK-2024-8841',
+    role: 'MEMBER',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+    phone: '0812-3456-7890',
+    address: 'Jl. Merdeka No. 45, Jakarta Selatan',
+    status: 'Aktif',
+    joinDate: '15 Jan 2024',
+    totalLoans: 14,
+    activeLoansCount: 2
+  },
+  {
+    id: 'u-2',
+    name: 'Dewi Lestari',
+    email: 'dewi.lestari@perpus.sch.id',
+    memberId: 'PK-2024-3210',
+    role: 'MEMBER',
+    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80',
+    phone: '0813-9876-5432',
+    address: 'Jl. Surya Kencana No. 12, Bandung',
+    status: 'Aktif',
+    joinDate: '02 Feb 2024',
+    totalLoans: 9,
+    activeLoansCount: 1
+  },
+  {
+    id: 'u-3',
+    name: 'Budi Santoso',
+    email: 'budi.santoso@perpus.sch.id',
+    memberId: 'PK-2024-1102',
+    role: 'MEMBER',
+    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80',
+    phone: '0811-2233-4455',
+    address: 'Jl. Diponegoro No. 8, Yogyakarta',
+    status: 'Aktif',
+    joinDate: '10 Mar 2024',
+    totalLoans: 6,
+    activeLoansCount: 0
+  },
+  {
+    id: 'u-4',
+    name: 'Siti Rahma',
+    email: 'siti.rahma@perpus.sch.id',
+    memberId: 'PK-2023-9081',
+    role: 'LIBRARIAN',
+    avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=200&q=80',
+    phone: '0857-1122-3344',
+    address: 'Jl. Gajah Mada No. 19, Surabaya',
+    status: 'Aktif',
+    joinDate: '18 Nov 2023',
+    totalLoans: 25,
+    activeLoansCount: 0
+  },
+  {
+    id: 'u-admin',
+    name: 'Admin Perpustakaan',
+    email: 'admin@perpuskita.id',
+    memberId: 'ADM-001',
+    role: 'ADMIN',
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80',
+    phone: '0812-9988-7766',
+    address: 'Gedung Perpustakaan Pusat Lt. 2',
+    status: 'Aktif',
+    joinDate: '01 Jan 2023',
+    totalLoans: 0,
+    activeLoansCount: 0
+  }
+];
+
+export const INITIAL_CATEGORIES: CategoryRecord[] = [
+  { id: 'cat-1', name: 'Fiksi', description: 'Koleksi novel, sastra Indonesia & dunia, cerita pendek, dan puisi', shelfPrefix: 'Rak A', bookCount: 420 },
+  { id: 'cat-2', name: 'Pendidikan', description: 'Buku teks akademik, pedagogi, metode pembelajaran, dan riset', shelfPrefix: 'Rak P', bookCount: 310 },
+  { id: 'cat-3', name: 'Teknologi', description: 'Pemrograman, rekayasa perangkat lunak, AI, dan arsitektur sistem', shelfPrefix: 'Rak T', bookCount: 285 },
+  { id: 'cat-4', name: 'Sejarah', description: 'Babad nusantara, sejarah peradaban dunia, dan arsip biografi', shelfPrefix: 'Rak S', bookCount: 195 },
+  { id: 'cat-5', name: 'Kesehatan', description: 'Ilmu kedokteran umum, nutrisi, kebugaran, dan kesehatan mental', shelfPrefix: 'Rak K', bookCount: 140 },
+  { id: 'cat-6', name: 'Psikologi', description: 'Psikologi kognitif, perilaku manusia, stoikisme, dan konseling', shelfPrefix: 'Rak PS', bookCount: 220 },
+  { id: 'cat-7', name: 'Bisnis', description: 'Manajemen, keuangan, kewirausahaan, investasi, dan kepemimpinan', shelfPrefix: 'Rak B', bookCount: 260 },
+  { id: 'cat-8', name: 'Pengembangan Diri', description: 'Kebiasaan efektif, motivasi, komunikasi publik, dan produktivitas', shelfPrefix: 'Rak D', bookCount: 340 },
+  { id: 'cat-9', name: 'Lainnya', description: 'Koleksi referensi umum, ensiklopedia, dan atlas geografi', shelfPrefix: 'Rak X', bookCount: 95 }
+];
+
+export const INITIAL_SETTINGS: LibrarySettings = {
+  libraryName: 'PerpusKita Digital Library',
+  maxLoanDays: 14,
+  maxRenewCount: 2,
+  finePerDay: 1000,
+  openingHours: 'Senin – Sabtu, 08:00 – 17:00 WIB',
+  contactEmail: 'layanan@perpuskita.id',
+  contactPhone: '(021) 7890-1234',
+  address: 'Jl. Perpustakaan Nasional No. 1, Jakarta Pusat 10110'
+};
+
