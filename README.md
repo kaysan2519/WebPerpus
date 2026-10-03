@@ -1,7 +1,7 @@
 # PerpusKita — Modern Editorial Digital Library
 
 > **"Temukan Dunia Baru di Setiap Buku."**  
-> Perpustakaan digital terkurasi dengan konsep **Modern Editorial Library** yang memadukan kehangatan literatur fisik dengan keandalan produk digital modern, autentikasi **Clerk**, integrasi **Google Books API**, dan arsitektur database **Prisma ORM**.
+> Perpustakaan digital terkurasi dengan konsep **Modern Editorial Library** yang memadukan kehangatan literatur fisik dengan keandalan produk digital modern, autentikasi **Clerk**, integrasi **Google Books API**, arsitektur database **Prisma ORM**, modul denda, direktori anggota, dan ekspor laporan sirkulasi.
 
 ---
 
@@ -34,7 +34,7 @@ Website PerpusKita dirancang ulang secara menyeluruh dengan mengadopsi standar d
 ## 🔐 Autentikasi Clerk & Kontrol Akses (RBAC)
 
 PerpusKita terintegrasi dengan **Clerk Authentication** resmi:
-- **Aplikasi Clerk**: `PerpusKita` (`app_3K7WxXezh9QqodIfLYDzt3s2wKO`) terhubung melalui Clerk CLI (`clerk apps`).
+- **Aplikasi Clerk**: `PerpusKita` terhubung melalui Clerk Provider.
 - **Halaman Editorial Khusus**:
   - `/sign-in/[[...sign-in]]`: Tampilan split-screen bernuansa Warm Ivory & Forest Green dengan logo resmi dan kutipan editorial.
   - `/sign-up/[[...sign-up]]`: Registrasi keanggotaan terintegrasi.
@@ -42,28 +42,75 @@ PerpusKita terintegrasi dengan **Clerk Authentication** resmi:
   - Komponen `<SignedIn>`, `<SignedOut>`, dan `<UserButton>` terintegrasi di navbar.
   - Proteksi rute otomatis melalui `src/middleware.ts`.
 - **Peran Pengguna (Role-Based Access Control)**:
-  - **ADMIN**: Akses penuh ke dashboard admin, manajemen katalog, sirkulasi pinjaman, dan alat impor Google Books.
-  - **LIBRARIAN (Pustakawan)**: Pengelolaan salinan buku, preservasi fisik, dan verifikasi sirkulasi.
-  - **MEMBER (Anggota)**: Pencarian katalog, peminjaman fisik, perpanjangan mandiri, riwayat bacaan, dan kartu anggota digital.
+  - **ADMIN**: Akses penuh ke dashboard admin, manajemen katalog fisik, sirkulasi peminjaman, direktori anggota, pemetaan rak, dan alat impor Google Books.
+  - **LIBRARIAN (Pustakawan)**: Pengelolaan salinan buku, preservasi fisik, dan verifikasi meja sirkulasi.
+  - **MEMBER (Anggota)**: Pencarian katalog, peminjaman fisik, perpanjangan mandiri, riwayat bacaan, kartu anggota digital printable, dan manajemen profil.
 
 ---
 
-## 🌐 Integrasi Google Books API v1
+## 🌐 Integrasi Google Books API v1 & REST API Backend
 
-PerpusKita terhubung secara langsung dengan **Google Books API** sebagai penyedia referensi data bibliografi global:
+PerpusKita terhubung secara langsung dengan **Google Books API** sebagai penyedia referensi data bibliografi global serta menyediakan REST API internal:
 
 ### Endpoint Internal Backend:
 - `GET /api/books/search?q={terms}&maxResults={1-40}&startIndex={n}&orderBy={relevance|newest}&langRestrict={id|en}&printType={books|all}`
-  - Menerima kata kunci dan parameter pencarian
-  - Validasi parameter dan sanitasi request
-  - Menangani error timeout, 429 quota limit, dan data hilang secara transparan dengan fallback terkurasi
+  - Pencarian Google Books API dengan validasi, sanitasi, dan fallback otomatis ke katalog terkurasi saat kuota publik tercapai.
 - `GET /api/books/[id]`
-  - Mengambil volume Google Books tunggal berdasarkan ID
+  - Mengambil detail buku volume tunggal berdasarkan Google Volume ID.
+- `GET /api/stats`
+  - Mengambil ringkasan statistik sirkulasi (total buku, anggota, pinjaman aktif, denda, chart 30 hari).
+- `GET /api/loans` & `POST /api/loans`
+  - Mendapatkan riwayat peminjaman dengan filter status/user serta pemrosesan peminjaman baru.
+- `GET /api/members` & `POST /api/members`
+  - Direktori anggota perpustakaan dan pendaftaran anggota baru.
+- `GET /api/categories`
+  - Daftar kategori buku perpustakaan lengkap dengan alokasi prefix rak fisik.
 
-### Pemisahan Data & Alur Impor:
-- **Google Books API**: Digunakan untuk penemuan buku global, metadata lengkap (ISBN-10/13, halaman, tanggal terbit, deskripsi), gambar sampul, dan tautan pratinjau.
-- **Inventaris Perpustakaan Lokal**: Mengelola koleksi resmi, nomor lokasi rak (`shelfLocation`), stok fisik (`stockCount`), status peminjaman, perpanjangan, dan pengembalian.
-- **Alur Impor Admin**: Admin dapat mencari buku di Google Books, menekan tombol **Periksa & Impor**, menyesuaikan metadata dan lokasi rak fisik, serta menyimpannya dengan pencegahan duplikasi otomatis (berdasarkan ID volume dan ISBN).
+---
+
+## 📚 Fitur & Modul Utama Aplikasi
+
+### 1. Landing Page (`/`)
+- Editorial Hero dengan headline terarah dan tombol aksi utama.
+- Kolom pencarian buku cepat dengan integrasi navigasi ke katalog perpustakaan dan Google Books.
+- 4 Kartu Metrik Perpustakaan (12.500+ Buku, 3.200+ Anggota, 8 Kategori, 24/7 Akses).
+- Rak interaktif **Koleksi Pilihan** dengan navigasi pill kategori dan filter kuratorial.
+
+### 2. Katalog Buku & Eksplorasi Global (`/katalog`)
+- **Mode Koleksi Perpustakaan**: Filter kategori radio, slider tahun (1970–2025), status ketersediaan, dan bahasa.
+- **Mode Eksplorasi Google Books**: Pencarian real-time dengan debounce, filter bahasa (`id`, `en`), urutan (`relevance`, `newest`), skeleton loading, penanganan kuota, dan paginasi.
+
+### 3. Detail Buku Bibliografi & Lokal (`/katalog/[slug]` & `/katalog/gbook/[id]`)
+- Komposisi editorial split-screen dengan sampul beresolusi tinggi.
+- Tab: **Deskripsi**, **Ulasan Pembaca**, dan **Buku Serupa**.
+- Form pengiriman ulasan interaktif dengan rating bintang.
+- Modal peminjaman langsung dengan kalkulasi tanggal jatuh tempo.
+
+### 4. Dashboard Anggota Siswa (`/dashboard`)
+- **Tab Beranda**: Sapaan personal, 4 kartu metrik anggota, peringatan denda keterlambatan, buku yang sedang dipinjam dengan aksi **Perpanjang** & **Kembalikan**.
+- **Tab Koleksi Favorit**: Grid buku yang disimpan, aksi hapus favorit, dan tombol **Pinjam Sekarang**.
+- **Tab Ulasan Saya**: Daftar ulasan yang pernah dikirimkan anggota beserta opsi hapus.
+- **Tab Pengaturan Profil**: Form pembaharuan nama, email, nomor WhatsApp, alamat domisili, dan preferensi notifikasi email/WA.
+- **Kartu Perpustakaan Digital Printable**: Modal pratinjau kartu anggota eksklusif dilengkapi foto profil, ID anggota unik, barcode, QR Code, dan tombol **Cetak Kartu** (`window.print()`).
+
+### 5. Pusat Notifikasi Terintegrasi (Notification Center)
+- Terhubung pada ikon lonceng di Navbar dan Sidebar Dashboard dengan badge counter pesan belum dibaca.
+- Tipe notifikasi: Pengingat Jatuh Tempo (H-3), Keterlambatan Sirkulasi, Konfirmasi Perpanjangan, dan Pengumuman Koleksi Baru.
+- Aksi: Filter belum dibaca, Tandai satu/semua dibaca, dan Bersihkan notifikasi.
+
+### 6. Dashboard Admin Enterprise (`/dashboard/admin`)
+- **Tab Dashboard**: Metrik agregat, diagram batang sirkulasi harian interaktif 30 hari, daftar buku terpopuler, dan audit feed realtime.
+- **Tab Manajemen Buku**: Tabel inventaris lengkap dengan pencarian cepat, filter kategori, **Tambah Buku Manual**, **Edit Data Buku**, dan **Hapus Buku**.
+- **Tab Sirkulasi & Peminjaman**: Meja sirkulasi terpusat untuk memproses pengembalian, status keterlambatan, penagihan denda, serta pembebasan denda (*waive fine*).
+- **Tab Direktori Anggota**: Tabel data anggota dengan peran (ADMIN, LIBRARIAN, MEMBER), status (Aktif, Nonaktif), dan modal **Registrasi Anggota Baru**.
+- **Tab Kategori & Rak**: Pemetaan kode rak fisik (Rak T-01, Rak A-12, Rak S-03) dan modal **Tambah Kategori Baru**.
+- **Tab Laporan & Ekspor**: Rekapitulasi sirkulasi bulanan, indikator mutu, dan fitur **Ekspor CSV / Excel** instan yang mengunduh file `.csv` transaksi secara otomatis.
+- **Tab Pengaturan Sistem**: Konfigurasi parameter perpustakaan (Durasi Pinjam, Denda Keterlambatan per Hari, Maksimal Perpanjangan, Jam Operasional, Kontak).
+
+### 7. Riwayat Peminjaman (`/peminjaman`)
+- Filter status riwayat: *Semua, Dipinjam, Dikembalikan, Terlambat*.
+- Bar pencarian spesifik judul dan pengarang dalam riwayat.
+- Indikator denda keterlambatan dengan tombol **Bayar Denda**.
 
 ---
 
@@ -95,41 +142,6 @@ npm run db:studio
 
 ---
 
-## 📚 Halaman & Fitur Utama
-
-1. **Landing Page (`/`)**
-   - Editorial Hero dengan headline terarah dan tombol aksi utama.
-   - Kolom pencarian buku cepat dengan integrasi navigasi ke katalog perpustakaan dan Google Books.
-   - 4 Kartu Metrik Perpustakaan (12.500+ Buku, 3.200+ Anggota, 8 Kategori, 24/7 Akses).
-   - Rak interaktif **Koleksi Pilihan** dengan navigasi pill kategori dan filter kuratorial.
-
-2. **Katalog Buku & Eksplorasi Global (`/katalog`)**
-   - **Mode Koleksi Perpustakaan**: Filter kategori radio, slider tahun (1970–2025), status ketersediaan, dan bahasa.
-   - **Mode Eksplorasi Google Books**: Pencarian real-time dengan debounce, filter bahasa (`id`, `en`), urutan (`relevance`, `newest`), skeleton loading, penanganan kuota, dan paginasi.
-
-3. **Detail Buku Bibliografi & Lokal (`/katalog/[slug]` & `/katalog/gbook/[id]`)**
-   - Komposisi editorial split-screen dengan sampul beresolusi tinggi (atau placeholder editorial jika tidak ada sampul).
-   - Pemisahan jelas antara **Informasi Inventaris Fisik** (Rak, Stok, Status Pinjam) dan **Metadata Bibliografi Resmi**.
-   - Tombol "Pinjam Buku" hanya aktif jika buku memiliki inventaris lokal yang valid.
-   - Tautan "Baca Pratinjau di Google Books".
-
-4. **Dashboard Siswa / Anggota (`/dashboard`)**
-   - Sapaan hangat dan statistik personal: Buku Dipinjam, Terlambat, Favorit, dan Ulasan.
-   - Daftar aktif "Buku yang Sedang Dipinjam" dengan aksi **Perpanjang** & **Kembalikan** seketika.
-   - **Kartu Perpustakaan Digital**: Tampilan kartu eksklusif bernuansa deep green dilengkapi kode identitas QR.
-
-5. **Dashboard Admin (`/dashboard/admin`)**
-   - Sidebar elegan berwarna Deep Forest Green (`#12382F`).
-   - Fitur **Impor dari Google Books**: Pencarian langsung, pratinjau, modal pemeriksaan metadata, dan pencegahan duplikasi.
-   - Tabel manajemen inventaris buku dengan pencarian cepat dan status rak.
-   - **Statistik Peminjaman (Chart 30 Hari)**: Bar chart interaktif dengan visualisasi data sirkulasi dan tooltip harian.
-
-6. **Riwayat Peminjaman (`/peminjaman`)**
-   - Filter status riwayat: *Semua, Dipinjam, Dikembalikan, Terlambat*.
-   - Manajemen perpanjangan masa pinjam dan status pengembalian.
-
----
-
 ## 🛠️ Arsitektur Teknologi
 
 - **Framework**: Next.js 14 (App Router)
@@ -139,7 +151,7 @@ npm run db:studio
 - **Database & ORM**: Prisma 5.22.0 (MySQL)
 - **External Integration**: Google Books API v1
 - **Icons**: Lucide React
-- **State Management**: React Context (`LibraryContext`) dengan sinkronisasi instan data peminjaman, ulasan, bookmark, dan impor koleksi.
+- **State Management**: React Context (`LibraryContext`) dengan sinkronisasi instan data peminjaman, ulasan, bookmark, notifikasi, denda, direktori anggota, dan ekspor koleksi.
 
 ---
 
