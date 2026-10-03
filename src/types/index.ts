@@ -136,3 +136,69 @@ export interface ImportBookPayload {
   previewLink?: string;
   infoLink?: string;
 }
+
+export type FineStatus = 'Belum Dibayar' | 'Lunas' | 'Dibebaskan';
+
+export interface FineRecord {
+  id: string;
+  loanId: string;
+  userId: string;
+  userName: string;
+  bookTitle: string;
+  amount: number;
+  status: FineStatus;
+  dueDate: string;
+  daysOverdue: number;
+  createdAt: string;
+  paidAt?: string;
+}
+
+export type NotificationType = 'INFO' | 'DUE_REMINDER' | 'OVERDUE' | 'RENEW' | 'SUCCESS';
+
+export interface NotificationItem {
+  id: string;
+  userId: string;
+  title: string;
+  message: string;
+  isRead: boolean;
+  type: NotificationType;
+  createdAt: string;
+  link?: string;
+}
+
+export type MemberStatus = 'Aktif' | 'Nonaktif' | 'Ditangguhkan';
+
+export interface MemberRecord {
+  id: string;
+  name: string;
+  email: string;
+  memberId: string; // e.g. PK-2024-8841
+  role: 'ADMIN' | 'LIBRARIAN' | 'MEMBER';
+  avatar: string;
+  phone: string;
+  address: string;
+  status: MemberStatus;
+  joinDate: string;
+  totalLoans: number;
+  activeLoansCount: number;
+}
+
+export interface CategoryRecord {
+  id: string;
+  name: BookCategory;
+  description: string;
+  shelfPrefix: string;
+  bookCount: number;
+}
+
+export interface LibrarySettings {
+  libraryName: string;
+  maxLoanDays: number;
+  maxRenewCount: number;
+  finePerDay: number;
+  openingHours: string;
+  contactEmail: string;
+  contactPhone: string;
+  address: string;
+}
+

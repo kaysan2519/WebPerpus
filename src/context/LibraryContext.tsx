@@ -1,18 +1,43 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Book, LoanRecord, ActivityItem, Review, ImportBookPayload } from '@/types';
-import { INITIAL_BOOKS, INITIAL_LOANS, INITIAL_ACTIVITIES, INITIAL_REVIEWS } from '@/data/books';
+import { 
+  Book, 
+  LoanRecord, 
+  ActivityItem, 
+  Review, 
+  ImportBookPayload,
+  FineRecord,
+  NotificationItem,
+  MemberRecord,
+  MemberStatus,
+  CategoryRecord,
+  LibrarySettings,
+  BookCategory
+} from '@/types';
+import { 
+  INITIAL_BOOKS, 
+  INITIAL_LOANS, 
+  INITIAL_ACTIVITIES, 
+  INITIAL_REVIEWS,
+  INITIAL_FINES,
+  INITIAL_NOTIFICATIONS,
+  INITIAL_MEMBERS,
+  INITIAL_CATEGORIES,
+  INITIAL_SETTINGS
+} from '@/data/books';
 
 export type UserRole = 'siswa' | 'admin' | 'guest';
 
-interface UserProfile {
+export interface UserProfile {
   id: string;
   name: string;
   email: string;
   role: UserRole;
   avatar: string;
   memberId: string;
+  phone?: string;
+  address?: string;
 }
 
 interface ToastInfo {
@@ -28,6 +53,12 @@ interface LibraryContextType {
   currentUser: UserProfile;
   activities: ActivityItem[];
   reviews: Review[];
+  fines: FineRecord[];
+  notifications: NotificationItem[];
+  unreadNotificationsCount: number;
+  members: MemberRecord[];
+  categories: CategoryRecord[];
+  settings: LibrarySettings;
   searchQuery: string;
   selectedCategory: string;
   toasts: ToastInfo[];
@@ -39,6 +70,20 @@ interface LibraryContextType {
   renewLoan: (loanId: string) => { success: boolean; message: string };
   returnLoan: (loanId: string) => { success: boolean; message: string };
   addReview: (bookId: string, rating: number, comment: string) => void;
+  deleteReview: (reviewId: string) => void;
+  payFine: (fineId: string) => void;
+  waiveFine: (fineId: string) => void;
+  markNotificationAsRead: (id: string) => void;
+  markAllNotificationsAsRead: () => void;
+  clearNotifications: () => void;
+  addMember: (member: Omit<MemberRecord, 'id' | 'joinDate' | 'totalLoans' | 'activeLoansCount'>) => void;
+  updateMemberStatus: (id: string, status: MemberStatus) => void;
+  addCategory: (cat: Omit<CategoryRecord, 'id' | 'bookCount'>) => void;
+  updateSettings: (newSettings: Partial<LibrarySettings>) => void;
+  updateUserProfile: (updates: Partial<UserProfile>) => void;
+  addBookManual: (payload: Partial<Book>) => { success: boolean; message: string; book?: Book };
+  updateBook: (id: string, updates: Partial<Book>) => void;
+  deleteBook: (id: string) => void;
   showToast: (message: string, type?: 'success' | 'info' | 'error') => void;
   dismissToast: (id: string) => void;
   getBookById: (id: string) => Book | undefined;
@@ -55,6 +100,11 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
   const [favorites, setFavorites] = useState<string[]>(['b-1', 'b-3', 'b-4']);
   const [activities, setActivities] = useState<ActivityItem[]>(INITIAL_ACTIVITIES);
   const [reviews, setReviews] = useState<Review[]>(INITIAL_REVIEWS);
+  const [fines, setFines] = useState<FineRecord[]>(INITIAL_FINES);
+  const [notifications, setNotifications] = useState<NotificationItem[]>(INITIAL_NOTIFICATIONS);
+  const [members, setMembers] = useState<MemberRecord[]>(INITIAL_MEMBERS);
+  const [categories, setCategories] = useState<CategoryRecord[]>(INITIAL_CATEGORIES);
+  const [settings, setSettings] = useState<LibrarySettings>(INITIAL_SETTINGS);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<string>('Semua');
   const [toasts, setToasts] = useState<ToastInfo[]>([]);
@@ -66,9 +116,11 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
     role: 'siswa',
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
     memberId: 'PK-2024-8841',
+    phone: '0812-3456-7890',
+    address: 'Jl. Merdeka No. 45, Jakarta Selatan',
   });
 
-  // Try to load persisted imported books from localStorage on mount
+  // Try to load persisted custom books from localStorage on mount
   useEffect(() => {
     try {
       const savedBooks = localStorage.getItem('perpuskita_custom_books');
@@ -106,6 +158,8 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
         role: 'admin',
         avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80',
         memberId: 'ADM-001',
+        phone: '0812-9988-7766',
+        address: 'Gedung Perpustakaan Pusat Lt. 2',
       });
       showToast('Beralih ke mode Admin Panel', 'info');
     } else if (role === 'siswa') {
@@ -116,6 +170,8 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
         role: 'siswa',
         avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
         memberId: 'PK-2024-8841',
+        phone: '0812-3456-7890',
+        address: 'Jl. Merdeka No. 45, Jakarta Selatan',
       });
       showToast('Beralih ke mode Anggota / Siswa', 'info');
     } else {
@@ -129,6 +185,24 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       });
       showToast('Beralih ke mode Pengunjung (Tamu)', 'info');
     }
+  };
+
+  const updateUserProfile = (updates: Partial<UserProfile>) => {
+    setCurrentUser((prev) => ({ ...prev, ...updates }));
+    setMembers((prev) =>
+      prev.map((m) =>
+        m.id === currentUser.id
+          ? {
+              ...m,
+              name: updates.name || m.name,
+              email: updates.email || m.email,
+              phone: updates.phone || m.phone,
+              address: updates.address || m.address,
+            }
+          : m
+      )
+    );
+    showToast('Profil keanggotaan berhasil diperbarui!', 'success');
   };
 
   const toggleFavorite = (bookId: string) => {
@@ -190,6 +264,15 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       )
     );
 
+    // Update member loans count
+    setMembers((prev) =>
+      prev.map((m) =>
+        m.id === currentUser.id
+          ? { ...m, totalLoans: m.totalLoans + 1, activeLoansCount: m.activeLoansCount + 1 }
+          : m
+      )
+    );
+
     // Add activity
     const newActivity: ActivityItem = {
       id: `act-${Date.now()}`,
@@ -199,6 +282,19 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       iconName: 'BookOpen',
     };
     setActivities((prev) => [newActivity, ...prev]);
+
+    // Create notification
+    const newNotif: NotificationItem = {
+      id: `notif-${Date.now()}`,
+      userId: currentUser.id,
+      title: 'Peminjaman Sukses',
+      message: `Buku "${book.title}" berhasil dipinjam. Batas pengembalian: ${newLoan.dueDate}.`,
+      isRead: false,
+      type: 'SUCCESS',
+      createdAt: 'Baru saja',
+      link: '/peminjaman',
+    };
+    setNotifications((prev) => [newNotif, ...prev]);
 
     showToast(`Berhasil meminjam "${book.title}". Jatuh tempo: ${newLoan.dueDate}`, 'success');
     return { success: true, message: 'Peminjaman berhasil diproses!' };
@@ -210,8 +306,8 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       return { success: false, message: 'Catatan peminjaman tidak ditemukan' };
     }
 
-    if (loan.renewCount >= 2) {
-      showToast('Batas perpanjangan maksimal (2x) telah tercapai', 'error');
+    if (loan.renewCount >= settings.maxRenewCount) {
+      showToast(`Batas perpanjangan maksimal (${settings.maxRenewCount}x) telah tercapai`, 'error');
       return { success: false, message: 'Batas perpanjangan telah tercapai' };
     }
 
@@ -227,11 +323,24 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
               ...l,
               dueDate: newDueDateStr,
               renewCount: l.renewCount + 1,
-              renewable: l.renewCount + 1 < 2,
+              renewable: l.renewCount + 1 < settings.maxRenewCount,
             }
           : l
       )
     );
+
+    // Add notification
+    const newNotif: NotificationItem = {
+      id: `notif-${Date.now()}`,
+      userId: currentUser.id,
+      title: 'Perpanjangan Berhasil',
+      message: `Peminjaman "${loan.bookTitle}" diperpanjang hingga ${newDueDateStr}.`,
+      isRead: false,
+      type: 'RENEW',
+      createdAt: 'Baru saja',
+      link: '/peminjaman',
+    };
+    setNotifications((prev) => [newNotif, ...prev]);
 
     showToast(`Peminjaman "${loan.bookTitle}" diperpanjang hingga ${newDueDateStr}`, 'success');
     return { success: true, message: `Berhasil diperpanjang hingga ${newDueDateStr}` };
@@ -267,11 +376,20 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       )
     );
 
+    // Update active loans count for member
+    setMembers((prev) =>
+      prev.map((m) =>
+        m.id === loan.userId
+          ? { ...m, activeLoansCount: Math.max(0, m.activeLoansCount - 1) }
+          : m
+      )
+    );
+
     // Add activity
     const newActivity: ActivityItem = {
       id: `act-${Date.now()}`,
       type: 'return',
-      text: `${currentUser.name} mengembalikan buku ${loan.bookTitle}`,
+      text: `${loan.userName} mengembalikan buku ${loan.bookTitle}`,
       timeAgo: 'Baru saja',
       iconName: 'CheckCircle2',
     };
@@ -286,7 +404,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
       id: `rev-${Date.now()}`,
       bookId,
       userName: currentUser.name,
-      userRole: 'Anggota PerpusKita',
+      userRole: currentUser.role === 'admin' ? 'Staf Perpustakaan' : 'Anggota PerpusKita',
       rating,
       date: 'Hari ini',
       comment,
@@ -294,6 +412,155 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
     };
     setReviews((prev) => [newRev, ...prev]);
     showToast('Ulasan Anda berhasil diterbitkan!', 'success');
+  };
+
+  const deleteReview = (reviewId: string) => {
+    setReviews((prev) => prev.filter((r) => r.id !== reviewId));
+    showToast('Ulasan berhasil dihapus', 'info');
+  };
+
+  const payFine = (fineId: string) => {
+    const today = new Date();
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    const paidDate = `${today.getDate()} ${months[today.getMonth()]} ${today.getFullYear()}`;
+
+    setFines((prev) =>
+      prev.map((f) =>
+        f.id === fineId ? { ...f, status: 'Lunas', paidAt: paidDate } : f
+      )
+    );
+    showToast('Denda keterlambatan berhasil dilunasi!', 'success');
+  };
+
+  const waiveFine = (fineId: string) => {
+    setFines((prev) =>
+      prev.map((f) =>
+        f.id === fineId ? { ...f, status: 'Dibebaskan' } : f
+      )
+    );
+    showToast('Denda berhasil dibebaskan oleh admin!', 'info');
+  };
+
+  const markNotificationAsRead = (id: string) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
+    );
+  };
+
+  const markAllNotificationsAsRead = () => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    showToast('Semua notifikasi ditandai sudah dibaca', 'info');
+  };
+
+  const clearNotifications = () => {
+    setNotifications([]);
+    showToast('Kotak notifikasi dibersihkan', 'info');
+  };
+
+  const addMember = (payload: Omit<MemberRecord, 'id' | 'joinDate' | 'totalLoans' | 'activeLoansCount'>) => {
+    const today = new Date();
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    const joinDateStr = `${today.getDate()} ${months[today.getMonth()]} ${today.getFullYear()}`;
+
+    const newMember: MemberRecord = {
+      ...payload,
+      id: `u-${Date.now()}`,
+      joinDate: joinDateStr,
+      totalLoans: 0,
+      activeLoansCount: 0,
+    };
+
+    setMembers((prev) => [newMember, ...prev]);
+    showToast(`Anggota baru "${newMember.name}" (${newMember.memberId}) berhasil didaftarkan!`, 'success');
+  };
+
+  const updateMemberStatus = (id: string, status: MemberStatus) => {
+    setMembers((prev) =>
+      prev.map((m) => (m.id === id ? { ...m, status } : m))
+    );
+    showToast(`Status anggota berhasil diperbarui menjadi ${status}`, 'info');
+  };
+
+  const addCategory = (payload: Omit<CategoryRecord, 'id' | 'bookCount'>) => {
+    const newCat: CategoryRecord = {
+      ...payload,
+      id: `cat-${Date.now()}`,
+      bookCount: 0,
+    };
+    setCategories((prev) => [...prev, newCat]);
+    showToast(`Kategori "${newCat.name}" dengan prefix ${newCat.shelfPrefix} berhasil ditambahkan!`, 'success');
+  };
+
+  const updateSettings = (newSettings: Partial<LibrarySettings>) => {
+    setSettings((prev) => ({ ...prev, ...newSettings }));
+    showToast('Konfigurasi sistem perpustakaan berhasil disimpan!', 'success');
+  };
+
+  const addBookManual = (payload: Partial<Book>): { success: boolean; message: string; book?: Book } => {
+    if (!payload.title || !payload.author) {
+      return { success: false, message: 'Judul dan nama pengarang buku wajib diisi' };
+    }
+
+    const cleanSlug = payload.title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+    const uniqueSlug = `${cleanSlug || 'buku'}-${Math.random().toString(36).substring(2, 6)}`;
+
+    const newBook: Book = {
+      id: `book-${Date.now()}`,
+      slug: uniqueSlug,
+      title: payload.title,
+      author: payload.author,
+      coverImage: payload.coverImage || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=700&q=80',
+      category: payload.category || 'Teknologi',
+      rating: 4.5,
+      reviewsCount: 0,
+      status: 'Tersedia',
+      publisher: payload.publisher || 'Penerbit PerpusKita',
+      publishYear: payload.publishYear || new Date().getFullYear(),
+      pages: payload.pages || 250,
+      isbn: payload.isbn || `978-602-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(10 + Math.random() * 90)}-${Math.floor(1 + Math.random() * 9)}`,
+      language: payload.language || 'Indonesia',
+      shelfLocation: payload.shelfLocation || 'Rak Ekspedisi (Buku Baru)',
+      description: payload.description || 'Buku koleksi perpustakaan yang ditambahkan melalui panel admin.',
+      summaryQuote: `Buku karya ${payload.author} yang terdaftar resmi di katalog PerpusKita.`,
+      borrowCount: 0,
+      stockCount: payload.stockCount || 5,
+    };
+
+    setBooks((prev) => {
+      const updated = [newBook, ...prev];
+      try {
+        localStorage.setItem('perpuskita_custom_books', JSON.stringify(updated.filter(b => b.id.startsWith('book-') || b.isImportedFromGoogle)));
+      } catch (_) {}
+      return updated;
+    });
+
+    const newActivity: ActivityItem = {
+      id: `act-${Date.now()}`,
+      type: 'add_book',
+      text: `Admin menambahkan buku "${newBook.title}" ke katalog`,
+      timeAgo: 'Baru saja',
+      iconName: 'PlusCircle',
+    };
+    setActivities((prev) => [newActivity, ...prev]);
+
+    showToast(`Buku "${newBook.title}" berhasil ditambahkan ke inventaris!`, 'success');
+    return { success: true, message: 'Buku berhasil ditambahkan', book: newBook };
+  };
+
+  const updateBook = (id: string, updates: Partial<Book>) => {
+    setBooks((prev) =>
+      prev.map((b) => (b.id === id ? { ...b, ...updates } : b))
+    );
+    showToast('Data buku berhasil diperbarui!', 'success');
+  };
+
+  const deleteBook = (id: string) => {
+    const book = books.find((b) => b.id === id);
+    setBooks((prev) => prev.filter((b) => b.id !== id));
+    showToast(`Buku "${book?.title || 'Buku'}" berhasil dihapus dari inventaris`, 'info');
   };
 
   const getBookById = (id: string) => books.find((b) => b.id === id);
@@ -313,7 +580,6 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
   };
 
   const importBookFromGoogle = (payload: ImportBookPayload): { success: boolean; message: string; book?: Book } => {
-    // Check for duplicates
     const existing = isBookInLocalInventory(payload.googleVolumeId, payload.isbn, payload.title);
     if (existing) {
       const msg = `Buku "${existing.title}" sudah terdaftar di inventaris lokal (Lokasi: ${existing.shelfLocation})`;
@@ -357,7 +623,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
     setBooks((prev) => {
       const updated = [newBook, ...prev];
       try {
-        const customOnly = updated.filter((b) => b.isImportedFromGoogle);
+        const customOnly = updated.filter((b) => b.isImportedFromGoogle || b.id.startsWith('book-'));
         localStorage.setItem('perpuskita_custom_books', JSON.stringify(customOnly));
       } catch (_) {}
       return updated;
@@ -376,6 +642,8 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
     return { success: true, message: 'Buku berhasil diimpor', book: newBook };
   };
 
+  const unreadNotificationsCount = notifications.filter((n) => !n.isRead).length;
+
   return (
     <LibraryContext.Provider
       value={{
@@ -385,6 +653,12 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
         currentUser,
         activities,
         reviews,
+        fines,
+        notifications,
+        unreadNotificationsCount,
+        members,
+        categories,
+        settings,
         searchQuery,
         selectedCategory,
         toasts,
@@ -396,6 +670,20 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
         renewLoan,
         returnLoan,
         addReview,
+        deleteReview,
+        payFine,
+        waiveFine,
+        markNotificationAsRead,
+        markAllNotificationsAsRead,
+        clearNotifications,
+        addMember,
+        updateMemberStatus,
+        addCategory,
+        updateSettings,
+        updateUserProfile,
+        addBookManual,
+        updateBook,
+        deleteBook,
         showToast,
         dismissToast,
         getBookById,
