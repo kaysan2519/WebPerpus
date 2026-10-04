@@ -7,6 +7,7 @@ import { useLibrary } from '@/context/LibraryContext';
 import { LOAN_CHART_DATA } from '@/data/books';
 import { GoogleBookVolume, BookCategory, Book, MemberRecord, MemberStatus } from '@/types';
 import { ImportGoogleBookModal } from '@/components/admin/ImportGoogleBookModal';
+import { BarcodeScannerModal } from '@/components/admin/BarcodeScannerModal';
 import { BookPlaceholderCover } from '@/components/books/BookPlaceholderCover';
 import { 
   BookOpen, 
@@ -40,7 +41,8 @@ import {
   Save,
   Check,
   Ban,
-  DollarSign
+  DollarSign,
+  Barcode
 } from 'lucide-react';
 
 export default function AdminDashboardPage() {
@@ -78,6 +80,7 @@ export default function AdminDashboardPage() {
   const [adminGError, setAdminGError] = useState<string | null>(null);
   const [adminGQuotaExceeded, setAdminGQuotaExceeded] = useState(false);
   const [selectedVolumeForImport, setSelectedVolumeForImport] = useState<GoogleBookVolume | null>(null);
+  const [isBarcodeScannerOpen, setIsBarcodeScannerOpen] = useState(false);
 
   // Manual Add Book Modal
   const [isAddBookModalOpen, setIsAddBookModalOpen] = useState(false);
@@ -439,6 +442,16 @@ export default function AdminDashboardPage() {
               <Calendar className="w-3.5 h-3.5 text-[#174C3C]" />
               <span>{dateRange}</span>
             </div>
+
+            {/* Barcode & ISBN Scanner Action Button */}
+            <button
+              onClick={() => setIsBarcodeScannerOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#174C3C] text-white text-xs font-semibold hover:bg-[#12382F] transition-all shadow-xs"
+              title="Buka simulator scanner barcode / ISBN"
+            >
+              <Barcode className="w-3.5 h-3.5 text-[#A8B9A4]" />
+              <span className="hidden sm:inline">Scanner Barcode</span>
+            </button>
 
             {/* Google Books Import Action Button */}
             <button
@@ -1858,6 +1871,20 @@ export default function AdminDashboardPage() {
           setSelectedVolumeForImport(null);
           setIsGoogleSearchOpen(false);
           setActiveTab('buku');
+        }}
+      />
+
+      {/* Barcode & ISBN Scanner Modal */}
+      <BarcodeScannerModal
+        isOpen={isBarcodeScannerOpen}
+        onClose={() => setIsBarcodeScannerOpen(false)}
+        onBookSelected={(book) => {
+          setIsBarcodeScannerOpen(false);
+          setActiveTab('buku');
+        }}
+        onMemberSelected={(member) => {
+          setIsBarcodeScannerOpen(false);
+          setActiveTab('anggota');
         }}
       />
 
