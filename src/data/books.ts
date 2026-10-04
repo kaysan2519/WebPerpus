@@ -7,7 +7,8 @@ import {
   NotificationItem, 
   MemberRecord, 
   CategoryRecord, 
-  LibrarySettings 
+  LibrarySettings,
+  ReservationRecord
 } from '@/types';
 
 export const INITIAL_BOOKS: Book[] = [
@@ -594,4 +595,22 @@ export const INITIAL_SETTINGS: LibrarySettings = {
   contactPhone: '(021) 7890-1234',
   address: 'Jl. Perpustakaan Nasional No. 1, Jakarta Pusat 10110'
 };
+
+export const INITIAL_RESERVATIONS: ReservationRecord[] = [
+  {
+    id: 'res-1',
+    bookId: 'b-2',
+    bookTitle: 'Laut Bercerita',
+    bookAuthor: 'Leila S. Chudori',
+    bookCover: 'https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=700&q=80',
+    userId: 'u-1',
+    userName: 'Kaysan Rafif',
+    reservationDate: '20 Sep 2024',
+    estimatedAvailableDate: '26 Sep 2024',
+    queuePosition: 1,
+    status: 'Menunggu',
+    notes: 'Reservasi prioritas melalui katalog digital'
+  }
+];
+
 
