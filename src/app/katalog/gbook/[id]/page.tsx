@@ -10,6 +10,7 @@ import { GoogleBookVolume, Book } from '@/types';
 import { BookPlaceholderCover } from '@/components/books/BookPlaceholderCover';
 import { BorrowModal } from '@/components/books/BorrowModal';
 import { ImportGoogleBookModal } from '@/components/admin/ImportGoogleBookModal';
+import { EBookReaderModal } from '@/components/books/EBookReaderModal';
 import { 
   ChevronRight, 
   ArrowLeft, 
@@ -25,7 +26,8 @@ import {
   Hash, 
   Building,
   ArrowUpRight,
-  ShieldCheck
+  ShieldCheck,
+  Sparkles
 } from 'lucide-react';
 
 export default function GoogleBookDetailPage() {
@@ -42,6 +44,7 @@ export default function GoogleBookDetailPage() {
   // Modals
   const [isBorrowModalOpen, setIsBorrowModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isReaderModalOpen, setIsReaderModalOpen] = useState(false);
 
   useEffect(() => {
     async function fetchBookDetail() {
@@ -262,6 +265,15 @@ export default function GoogleBookDetailPage() {
                   </>
                 )}
 
+                {/* Interactive E-Book Reader Trigger */}
+                <button
+                  onClick={() => setIsReaderModalOpen(true)}
+                  className="w-full py-2.5 px-4 rounded-xl bg-[#E7EDE5] hover:bg-[#D7E2D4] text-[#174C3C] border border-[#A8B9A4]/40 font-semibold text-xs flex items-center justify-center gap-2 transition-all hover:shadow-xs"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-[#174C3C]" />
+                  <span>Baca Pratinjau Interaktif</span>
+                </button>
+
                 {/* External Preview Link if provided by Google */}
                 {volume.previewLink && (
                   <a
@@ -270,7 +282,7 @@ export default function GoogleBookDetailPage() {
                     rel="noopener noreferrer"
                     className="w-full py-2.5 px-4 rounded-xl border border-[#E5E6DF] bg-white hover:border-[#174C3C] text-[#252925] text-xs font-semibold flex items-center justify-center gap-2 transition-colors"
                   >
-                    <span>Baca Pratinjau di Google Books</span>
+                    <span>Buka Pratinjau di Google Books</span>
                     <ExternalLink className="w-3.5 h-3.5 text-[#777D77]" />
                   </a>
                 )}
@@ -421,6 +433,26 @@ export default function GoogleBookDetailPage() {
         isOpen={isImportModalOpen}
         onClose={() => setIsImportModalOpen(false)}
       />
+
+      {/* E-Book Reader Modal */}
+      {volume && (
+        <EBookReaderModal
+          book={{
+            id: volume.id,
+            title: volume.title,
+            author: volume.authors.join(', '),
+            coverImage: volume.thumbnail,
+            category: volume.categories?.[0] || 'Umum',
+            pages: volume.pageCount,
+            description: volume.description,
+            publisher: volume.publisher,
+            publishYear: volume.publishedDate ? parseInt(volume.publishedDate) : undefined,
+            previewLink: volume.previewLink,
+          }}
+          isOpen={isReaderModalOpen}
+          onClose={() => setIsReaderModalOpen(false)}
+        />
+      )}
     </div>
   );
 }
