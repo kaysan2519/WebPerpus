@@ -17,10 +17,11 @@ import {
   Share2, 
   MapPin, 
   ThumbsUp, 
-  MessageSquarePlus,
+  MessageSquarePlus, 
   ArrowLeft,
   Check,
-  Sparkles
+  Sparkles,
+  Clock
 } from 'lucide-react';
 
 export default function DetailBukuPage() {
@@ -28,7 +29,7 @@ export default function DetailBukuPage() {
   const router = useRouter();
   const slug = params.slug as string;
 
-  const { books, getBookBySlug, favorites, toggleFavorite, reviews, addReview } = useLibrary();
+  const { books, getBookBySlug, favorites, toggleFavorite, reviews, addReview, reservations, reserveBook, currentUser } = useLibrary();
   const [activeTab, setActiveTab] = useState<'deskripsi' | 'ulasan' | 'serupa'>('deskripsi');
   const [isBorrowModalOpen, setIsBorrowModalOpen] = useState(false);
   const [isReaderModalOpen, setIsReaderModalOpen] = useState(false);
@@ -59,6 +60,9 @@ export default function DetailBukuPage() {
   const isFav = favorites.includes(book.id);
   const bookReviews = reviews.filter((r) => r.bookId === book.id);
   const relatedBooks = books.filter((b) => b.id !== book.id && (b.category === book.category || b.isEditorChoice)).slice(0, 4);
+  const userReservation = reservations.find(
+    (r) => r.bookId === book.id && r.userId === currentUser.id && (r.status === 'Menunggu' || r.status === 'Siap Diambil')
+  );
 
   const handleReviewSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -110,18 +114,33 @@ export default function DetailBukuPage() {
 
               {/* Action Buttons matching mockup */}
               <div className="w-full max-w-[320px] mt-6 space-y-3">
-                <button
-                  onClick={() => setIsBorrowModalOpen(true)}
-                  disabled={book.status === 'Dipinjam'}
-                  className={`w-full py-3.5 px-4 rounded-xl font-semibold text-sm flex items-center justify-center gap-2.5 transition-all shadow-xs ${
-                    book.status === 'Tersedia'
-                      ? 'bg-[#174C3C] hover:bg-[#12382F] text-white'
-                      : 'bg-[#E5E6DF] text-[#777D77] cursor-not-allowed'
-                  }`}
-                >
-                  <BookOpen className="w-4 h-4" />
-                  <span>{book.status === 'Tersedia' ? 'Pinjam Buku' : 'Sedang Dipinjam'}</span>
-                </button>
+                {book.status === 'Tersedia' ? (
+                  <button
+                    onClick={() => setIsBorrowModalOpen(true)}
+                    className="w-full py-3.5 px-4 rounded-xl font-semibold text-sm flex items-center justify-center gap-2.5 transition-all shadow-xs bg-[#174C3C] hover:bg-[#12382F] text-white"
+                  >
+                    <BookOpen className="w-4 h-4" />
+                    <span>Pinjam Buku Ini</span>
+                  </button>
+                ) : userReservation ? (
+                  <div className="w-full py-3 px-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs text-center space-y-1">
+                    <div className="flex items-center justify-center gap-1.5 font-bold text-amber-800">
+                      <Clock className="w-4 h-4 text-amber-600" />
+                      <span>Telah Direservasi (Antrean #{userReservation.queuePosition})</span>
+                    </div>
+                    <p className="text-[11px] text-amber-700">
+                      Perkiraan tersedia: {userReservation.estimatedAvailableDate}
+                    </p>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => reserveBook(book.id)}
+                    className="w-full py-3.5 px-4 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold text-sm flex items-center justify-center gap-2.5 transition-all shadow-xs"
+                  >
+                    <Clock className="w-4 h-4" />
+                    <span>Reservasi & Antre Buku Ini</span>
+                  </button>
+                )}
 
                 <button
                   onClick={() => setIsReaderModalOpen(true)}

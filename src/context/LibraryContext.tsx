@@ -13,7 +13,8 @@ import {
   MemberStatus,
   CategoryRecord,
   LibrarySettings,
-  BookCategory
+  BookCategory,
+  ReservationRecord
 } from '@/types';
 import { 
   INITIAL_BOOKS, 
@@ -24,7 +25,8 @@ import {
   INITIAL_NOTIFICATIONS,
   INITIAL_MEMBERS,
   INITIAL_CATEGORIES,
-  INITIAL_SETTINGS
+  INITIAL_SETTINGS,
+  INITIAL_RESERVATIONS
 } from '@/data/books';
 
 export type UserRole = 'siswa' | 'admin' | 'guest';
@@ -54,6 +56,7 @@ interface LibraryContextType {
   activities: ActivityItem[];
   reviews: Review[];
   fines: FineRecord[];
+  reservations: ReservationRecord[];
   notifications: NotificationItem[];
   unreadNotificationsCount: number;
   members: MemberRecord[];
@@ -69,9 +72,12 @@ interface LibraryContextType {
   borrowBook: (bookId: string, durationDays?: number) => { success: boolean; message: string };
   renewLoan: (loanId: string) => { success: boolean; message: string };
   returnLoan: (loanId: string) => { success: boolean; message: string };
+  reserveBook: (bookId: string) => { success: boolean; message: string; reservation?: ReservationRecord };
+  cancelReservation: (reservationId: string) => { success: boolean; message: string };
   addReview: (bookId: string, rating: number, comment: string) => void;
   deleteReview: (reviewId: string) => void;
   payFine: (fineId: string) => void;
+  payFineWithDetails: (fineId: string, method: string, ref: string) => { success: boolean; message: string };
   waiveFine: (fineId: string) => void;
   markNotificationAsRead: (id: string) => void;
   markAllNotificationsAsRead: () => void;
@@ -101,6 +107,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
   const [activities, setActivities] = useState<ActivityItem[]>(INITIAL_ACTIVITIES);
   const [reviews, setReviews] = useState<Review[]>(INITIAL_REVIEWS);
   const [fines, setFines] = useState<FineRecord[]>(INITIAL_FINES);
+  const [reservations, setReservations] = useState<ReservationRecord[]>(INITIAL_RESERVATIONS);
   const [notifications, setNotifications] = useState<NotificationItem[]>(INITIAL_NOTIFICATIONS);
   const [members, setMembers] = useState<MemberRecord[]>(INITIAL_MEMBERS);
   const [categories, setCategories] = useState<CategoryRecord[]>(INITIAL_CATEGORIES);
@@ -432,6 +439,133 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
     showToast('Denda keterlambatan berhasil dilunasi!', 'success');
   };
 
+  const payFineWithDetails = (fineId: string, method: string, ref: string) => {
+    const today = new Date();
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    const paidDate = `${today.getDate()} ${months[today.getMonth()]} ${today.getFullYear()}`;
+
+    const fineItem = fines.find((f) => f.id === fineId);
+
+    setFines((prev) =>
+      prev.map((f) =>
+        f.id === fineId
+          ? {
+              ...f,
+              status: 'Lunas',
+              paidAt: paidDate,
+              paymentMethod: method,
+              transactionRef: ref,
+            }
+          : f
+      )
+    );
+
+    // Create confirmation notification
+    const newNotif: NotificationItem = {
+      id: `notif-${Date.now()}`,
+      userId: currentUser.id,
+      title: 'Pembayaran Denda Lunas',
+      message: `Pembayaran denda sebesar Rp ${(fineItem?.amount || 0).toLocaleString('id-ID')} via ${method} terverifikasi. Ref: ${ref}.`,
+      isRead: false,
+      type: 'SUCCESS',
+      createdAt: 'Baru saja',
+      link: '/dashboard',
+    };
+    setNotifications((prev) => [newNotif, ...prev]);
+
+    // Add activity
+    const newActivity: ActivityItem = {
+      id: `act-${Date.now()}`,
+      type: 'return',
+      text: `${currentUser.name} melunasi denda keterlambatan via ${method}`,
+      timeAgo: 'Baru saja',
+      iconName: 'CheckCircle2',
+    };
+    setActivities((prev) => [newActivity, ...prev]);
+
+    showToast(`Pembayaran denda via ${method} berhasil diverifikasi!`, 'success');
+    return { success: true, message: 'Denda berhasil dilunasi' };
+  };
+
+  const reserveBook = (bookId: string) => {
+    const book = books.find((b) => b.id === bookId);
+    if (!book) {
+      return { success: false, message: 'Buku tidak ditemukan' };
+    }
+
+    // Check if already reserved by this user
+    const existingActive = reservations.find(
+      (r) => r.bookId === bookId && r.userId === currentUser.id && (r.status === 'Menunggu' || r.status === 'Siap Diambil')
+    );
+    if (existingActive) {
+      showToast(`Anda sudah memiliki reservasi aktif untuk "${book.title}" (Antrean #${existingActive.queuePosition})`, 'info');
+      return { success: false, message: 'Buku sudah direservasi sebelumnya' };
+    }
+
+    const activeReservationsCount = reservations.filter((r) => r.bookId === bookId && r.status === 'Menunggu').length;
+    const queuePosition = activeReservationsCount + 1;
+
+    const today = new Date();
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    const resDateStr = `${today.getDate()} ${months[today.getMonth()]} ${today.getFullYear()}`;
+    
+    // Estimate available in 7 days
+    const estDate = new Date();
+    estDate.setDate(estDate.getDate() + 7);
+    const estDateStr = `${estDate.getDate()} ${months[estDate.getMonth()]} ${estDate.getFullYear()}`;
+
+    const newReservation: ReservationRecord = {
+      id: `res-${Date.now()}`,
+      bookId: book.id,
+      bookTitle: book.title,
+      bookAuthor: book.author,
+      bookCover: book.coverImage,
+      userId: currentUser.id,
+      userName: currentUser.name,
+      reservationDate: resDateStr,
+      estimatedAvailableDate: estDateStr,
+      queuePosition,
+      status: 'Menunggu',
+      notes: `Antrean ke-${queuePosition} via portal digital.`
+    };
+
+    setReservations((prev) => [newReservation, ...prev]);
+
+    // Create notification
+    const newNotif: NotificationItem = {
+      id: `notif-${Date.now()}`,
+      userId: currentUser.id,
+      title: 'Reservasi Berhasil',
+      message: `Anda masuk antrean ke-${queuePosition} untuk buku "${book.title}". Perkiraan siap: ${estDateStr}.`,
+      isRead: false,
+      type: 'SUCCESS',
+      createdAt: 'Baru saja',
+      link: '/dashboard',
+    };
+    setNotifications((prev) => [newNotif, ...prev]);
+
+    // Add activity
+    const newActivity: ActivityItem = {
+      id: `act-${Date.now()}`,
+      type: 'borrow',
+      text: `${currentUser.name} mereservasi antrean buku ${book.title}`,
+      timeAgo: 'Baru saja',
+      iconName: 'Clock',
+    };
+    setActivities((prev) => [newActivity, ...prev]);
+
+    showToast(`Berhasil reservasi "${book.title}". Anda antrean ke-${queuePosition}.`, 'success');
+    return { success: true, message: `Reservasi berhasil (Antrean #${queuePosition})`, reservation: newReservation };
+  };
+
+  const cancelReservation = (reservationId: string) => {
+    setReservations((prev) =>
+      prev.map((r) => (r.id === reservationId ? { ...r, status: 'Dibatalkan' } : r))
+    );
+    showToast('Reservasi buku berhasil dibatalkan', 'info');
+    return { success: true, message: 'Reservasi berhasil dibatalkan' };
+  };
+
   const waiveFine = (fineId: string) => {
     setFines((prev) =>
       prev.map((f) =>
@@ -654,6 +788,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
         activities,
         reviews,
         fines,
+        reservations,
         notifications,
         unreadNotificationsCount,
         members,
@@ -669,9 +804,12 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
         borrowBook,
         renewLoan,
         returnLoan,
+        reserveBook,
+        cancelReservation,
         addReview,
         deleteReview,
         payFine,
+        payFineWithDetails,
         waiveFine,
         markNotificationAsRead,
         markAllNotificationsAsRead,

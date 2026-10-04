@@ -7,7 +7,8 @@ import { useLibrary } from '@/context/LibraryContext';
 import { DigitalCardModal } from '@/components/dashboard/DigitalCardModal';
 import { NotificationModal } from '@/components/layout/NotificationModal';
 import { BorrowModal } from '@/components/books/BorrowModal';
-import { Book } from '@/types';
+import { QRISPaymentModal } from '@/components/dashboard/QRISPaymentModal';
+import { Book, FineRecord } from '@/types';
 import { 
   BookOpen, 
   Clock, 
@@ -32,7 +33,8 @@ import {
   Check,
   CreditCard,
   Calendar,
-  MapPin
+  MapPin,
+  Sparkles
 } from 'lucide-react';
 
 export default function MemberDashboardPage() {
@@ -48,15 +50,19 @@ export default function MemberDashboardPage() {
     deleteReview,
     fines,
     payFine,
+    reservations,
+    cancelReservation,
     unreadNotificationsCount,
     updateUserProfile,
     showToast
   } = useLibrary();
 
-  const [activeNav, setActiveNav] = useState<'beranda' | 'favorit' | 'ulasan' | 'pengaturan'>('beranda');
+  const [activeNav, setActiveNav] = useState<'beranda' | 'favorit' | 'ulasan' | 'reservasi' | 'pengaturan'>('beranda');
   const [isCardModalOpen, setIsCardModalOpen] = useState(false);
   const [isNotifModalOpen, setIsNotifModalOpen] = useState(false);
   const [selectedBookForBorrow, setSelectedBookForBorrow] = useState<Book | null>(null);
+  const [selectedFineForPayment, setSelectedFineForPayment] = useState<FineRecord | null>(null);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
   // Profile form state
   const [profileName, setProfileName] = useState(currentUser.name);
@@ -74,6 +80,8 @@ export default function MemberDashboardPage() {
   const userReviews = reviews.filter((r) => r.userName === currentUser.name || r.userName.includes('Kaysan') || r.userName.includes('Siswa'));
   const userFines = fines.filter((f) => f.userId === currentUser.id);
   const pendingFines = userFines.filter((f) => f.status === 'Belum Dibayar');
+  const userReservations = reservations.filter((r) => r.userId === currentUser.id);
+  const activeReservations = userReservations.filter((r) => r.status === 'Menunggu' || r.status === 'Siap Diambil');
 
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
@@ -145,6 +153,23 @@ export default function MemberDashboardPage() {
               <span className="ml-auto text-[11px] px-1.5 py-0.5 rounded-full bg-[#E5E6DF] text-[#252925]">
                 {favorites.length}
               </span>
+            </button>
+
+            <button
+              onClick={() => setActiveNav('reservasi')}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${
+                activeNav === 'reservasi'
+                  ? 'bg-[#E7EDE5] text-[#174C3C] font-semibold'
+                  : 'text-[#252925] hover:bg-[#F7F6F2]'
+              }`}
+            >
+              <Clock className="w-4 h-4 text-[#777D77]" />
+              <span>Reservasi Saya</span>
+              {activeReservations.length > 0 && (
+                <span className="ml-auto text-[11px] px-1.5 py-0.5 rounded-full bg-[#174C3C] text-white font-semibold">
+                  {activeReservations.length}
+                </span>
+              )}
             </button>
 
             <button
@@ -289,10 +314,14 @@ export default function MemberDashboardPage() {
                     </div>
                   </div>
                   <button
-                    onClick={() => payFine(pendingFines[0].id)}
-                    className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-lg shrink-0 transition-colors shadow-xs"
+                    onClick={() => {
+                      setSelectedFineForPayment(pendingFines[0]);
+                      setIsPaymentModalOpen(true);
+                    }}
+                    className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-lg shrink-0 transition-colors shadow-xs flex items-center gap-1.5"
                   >
-                    Bayar Denda (Rp {pendingFines[0].amount.toLocaleString('id-ID')})
+                    <QrCode className="w-4 h-4" />
+                    <span>Bayar via QRIS / VA (Rp {pendingFines[0].amount.toLocaleString('id-ID')})</span>
                   </button>
                 </div>
               )}
@@ -710,6 +739,110 @@ export default function MemberDashboardPage() {
             </div>
           )}
 
+          {/* TAB: RESERVASI & ANTREAN BUKU */}
+          {activeNav === 'reservasi' && (
+            <div className="space-y-6 animate-in fade-in">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[#E5E6DF]">
+                <div>
+                  <h2 className="font-serif text-2xl font-bold text-[#174C3C]">
+                    Reservasi & Antrean Buku ({userReservations.length})
+                  </h2>
+                  <p className="text-xs sm:text-sm text-[#777D77] mt-1">
+                    Kelola antrean judul buku yang sedang dipinjam oleh anggota lain.
+                  </p>
+                </div>
+
+                <Link
+                  href="/katalog"
+                  className="px-4 py-2 rounded-xl bg-[#174C3C] hover:bg-[#12382F] text-white text-xs font-semibold flex items-center gap-1.5 transition-colors self-start sm:self-auto shadow-xs"
+                >
+                  <Search className="w-3.5 h-3.5" />
+                  <span>Jelajahi Katalog</span>
+                </Link>
+              </div>
+
+              {userReservations.length === 0 ? (
+                <div className="py-16 text-center bg-white rounded-2xl border border-[#E5E6DF] p-8 space-y-3">
+                  <div className="w-12 h-12 rounded-full bg-[#E7EDE5] text-[#174C3C] flex items-center justify-center mx-auto">
+                    <Clock className="w-6 h-6" />
+                  </div>
+                  <h3 className="font-serif text-base font-bold text-[#252925]">
+                    Belum Ada Reservasi Aktif
+                  </h3>
+                  <p className="text-xs text-[#777D77] max-w-sm mx-auto">
+                    Jika buku yang ingin Anda baca sedang dipinjam orang lain, Anda dapat melakukan reservasi untuk memesan giliran peminjaman berikutnya.
+                  </p>
+                  <div className="pt-2">
+                    <Link
+                      href="/katalog"
+                      className="px-5 py-2.5 rounded-lg bg-[#174C3C] text-white text-xs font-semibold hover:bg-[#12382F] transition-colors inline-block"
+                    >
+                      Cari Buku di Katalog
+                    </Link>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {userReservations.map((res) => (
+                    <div
+                      key={res.id}
+                      className="p-5 rounded-2xl border border-[#E5E6DF] bg-white shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-[#174C3C]/40 transition-all"
+                    >
+                      <div className="flex items-center gap-4">
+                        <img
+                          src={res.bookCover}
+                          alt={res.bookTitle}
+                          className="w-14 h-20 object-cover rounded-lg shadow-xs shrink-0"
+                        />
+                        <div className="space-y-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${
+                              res.status === 'Menunggu'
+                                ? 'bg-amber-100 text-amber-800'
+                                : res.status === 'Siap Diambil'
+                                ? 'bg-emerald-100 text-emerald-800'
+                                : 'bg-gray-100 text-gray-700'
+                            }`}>
+                              {res.status === 'Menunggu' ? `Antrean #${res.queuePosition}` : res.status}
+                            </span>
+                            <span className="text-[11px] text-[#777D77]">
+                              Dipesan: {res.reservationDate}
+                            </span>
+                          </div>
+
+                          <h3 className="font-semibold text-base text-[#252925]">{res.bookTitle}</h3>
+                          <p className="text-xs text-[#777D77]">{res.bookAuthor}</p>
+
+                          <div className="flex items-center gap-2 pt-1 text-xs text-[#174C3C]">
+                            <Calendar className="w-3.5 h-3.5" />
+                            <span>Perkiraan Tersedia: <strong>{res.estimatedAvailableDate}</strong></span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                        <Link
+                          href={`/katalog?q=${encodeURIComponent(res.bookTitle)}`}
+                          className="px-3 py-2 rounded-lg border border-[#E5E6DF] hover:border-[#174C3C] text-xs font-semibold text-[#252925] transition-colors"
+                        >
+                          Lihat Buku
+                        </Link>
+                        {res.status !== 'Dibatalkan' && (
+                          <button
+                            onClick={() => cancelReservation(res.id)}
+                            className="px-3 py-2 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs font-semibold transition-colors"
+                          >
+                            Batalkan
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* TAB 4: PENGATURAN PROFIL */}
           {activeNav === 'pengaturan' && (
             <div className="bg-white rounded-2xl border border-[#E5E6DF] p-6 sm:p-8 shadow-xs space-y-6">
@@ -889,6 +1022,13 @@ export default function MemberDashboardPage() {
           onClose={() => setSelectedBookForBorrow(null)}
         />
       )}
+
+      {/* QRIS / VA Fine Payment Modal */}
+      <QRISPaymentModal
+        isOpen={isPaymentModalOpen}
+        onClose={() => setIsPaymentModalOpen(false)}
+        fine={selectedFineForPayment}
+      />
 
     </div>
   );
