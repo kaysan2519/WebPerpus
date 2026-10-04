@@ -85,21 +85,56 @@ PerpusKita terhubung secara langsung dengan **Google Books API** sebagai penyedi
 - Tab: **Deskripsi**, **Ulasan Pembaca**, dan **Buku Serupa**.
 - Form pengiriman ulasan interaktif dengan rating bintang.
 - Modal peminjaman langsung dengan kalkulasi tanggal jatuh tempo.
+- **Baca Cuplikan E-Book**: Tombol peluncur pembaca digital interaktif untuk pratinjau bab buku.
+- **Reservasi Antrean Buku**: Jika buku sedang dipinjam, anggota dapat memesan nomor antrean sirkulasi.
 
-### 4. Dashboard Anggota Siswa (`/dashboard`)
-- **Tab Beranda**: Sapaan personal, 4 kartu metrik anggota, peringatan denda keterlambatan, buku yang sedang dipinjam dengan aksi **Perpanjang** & **Kembalikan**.
+### 4. Pembaca E-Book Digital Interaktif (Digital E-Reader Modal)
+- Fitur membaca cuplikan buku dengan transisi halaman animasi geser halus (*page flip transition*).
+- **Pengaturan Tipografi**: Pilihan ukuran teks (A- / A+), dan jenis font (*Serif*, *Sans-serif*, *Monospace*).
+- **4 Palet Tema Membaca**:
+  - **Gading (Warm Ivory)**: Kehangatan kertas buku klasik (`#FBF8F1`).
+  - **Sepia**: Kenyamanan visual bertema perkamen klasik (`#F4ECD8`).
+  - **Malam (Dark Mode)**: Mode gelap kontras tinggi untuk kenyamanan membaca di malam hari (`#191A1C`).
+  - **Putih Bersih**: Tampilan modern minimalis (`#FFFFFF`).
+- **Fitur Navigasi & Pembatas**: Drawer daftar isi bab, progress bar persentase membaca, penanda halaman (*bookmark ribbon*), mode layar penuh (*fullscreen*), dan navigasi keyboard (`←` / `→` / `Esc`).
+
+### 5. Sistem Reservasi & Antrean Peminjaman Buku
+- Memungkinkan civitas perpustakaan memesan buku yang unit fisiknya sedang dipinjam anggota lain.
+- Perhitungan posisi antrean otomatis (`Antrean #1`, `Antrean #2`, dst.) dan estimasi tanggal ketersediaan.
+- Manajemen antrean mandiri pada Dashboard Siswa dengan opsi **Batalkan Reservasi**.
+- Notifikasi terotomatisasi saat reservasi berhasil didaftarkan.
+
+### 6. Simulasi Gateway Pembayaran Denda QRIS & Virtual Account (`QRISPaymentModal`)
+- Pelunasan denda keterlambatan sirkulasi secara digital dan instan.
+- **Metode Pembayaran**:
+  - **QRIS Dinamis**: Tampilan grafis kode QRIS resmi dengan logo, timer hitung mundur 5 menit, dan pulsasi status real-time.
+  - **Virtual Account Bank**: Nomor VA terintegrasi untuk Bank BCA, Mandiri, BRI, dan BNI dengan tombol salin cepat dan panduan m-banking.
+- **Simulator Sandbox**: Tombol simulasi konfirmasi instan dengan status loading, animasi tanda centang sukses (*confetti checkmark*), penerbitan nomor referensi transaksi (`PAY-PK-XXXX`), dan opsi **Cetak Kuitansi Resmi**.
+
+### 7. Simulator Scanner Barcode & ISBN Sirkulasi Pustakawan (`BarcodeScannerModal`)
+- Simulator alat pemindai optik meja sirkulasi untuk staf perpustakaan.
+- **Animasi Sinar Laser**: Animasi pemindaian inframerah bergerak naik-turun menggunakan Framer Motion.
+- **Umpan Balik Audio**: Suara *beep* pemindai autentik menggunakan Web Audio API asli tanpa dependensi file eksternal.
+- **Dukungan Mode Ganda**:
+  - Pindai barcode buku / ISBN untuk memeriksa lokasi rak, stok fisik, serta tombol kilat **Pinjamkan Langsung** atau **Kembalikan Cepat**.
+  - Pindai kartu anggota (ID: `PK-2024-8841`) untuk membuka profil sirkulasi dan daftar buku yang sedang dipinjam.
+
+### 8. Dashboard Anggota Siswa (`/dashboard`)
+- **Tab Beranda**: Sapaan personal, 4 kartu metrik anggota, peringatan denda keterlambatan dengan peluncur **Bayar via QRIS / VA**, buku yang sedang dipinjam dengan aksi **Perpanjang** & **Kembalikan**.
+- **Tab Reservasi Saya**: Manajemen daftar antrean buku yang sedang dipesan.
 - **Tab Koleksi Favorit**: Grid buku yang disimpan, aksi hapus favorit, dan tombol **Pinjam Sekarang**.
 - **Tab Ulasan Saya**: Daftar ulasan yang pernah dikirimkan anggota beserta opsi hapus.
 - **Tab Pengaturan Profil**: Form pembaharuan nama, email, nomor WhatsApp, alamat domisili, dan preferensi notifikasi email/WA.
 - **Kartu Perpustakaan Digital Printable**: Modal pratinjau kartu anggota eksklusif dilengkapi foto profil, ID anggota unik, barcode, QR Code, dan tombol **Cetak Kartu** (`window.print()`).
 
-### 5. Pusat Notifikasi Terintegrasi (Notification Center)
+### 9. Pusat Notifikasi Terintegrasi (Notification Center)
 - Terhubung pada ikon lonceng di Navbar dan Sidebar Dashboard dengan badge counter pesan belum dibaca.
-- Tipe notifikasi: Pengingat Jatuh Tempo (H-3), Keterlambatan Sirkulasi, Konfirmasi Perpanjangan, dan Pengumuman Koleksi Baru.
+- Tipe notifikasi: Pengingat Jatuh Tempo (H-3), Keterlambatan Sirkulasi, Konfirmasi Perpanjangan, Bukti Pelunasan Denda, dan Konfirmasi Antrean Reservasi.
 - Aksi: Filter belum dibaca, Tandai satu/semua dibaca, dan Bersihkan notifikasi.
 
-### 6. Dashboard Admin Enterprise (`/dashboard/admin`)
+### 10. Dashboard Admin Enterprise (`/dashboard/admin`)
 - **Tab Dashboard**: Metrik agregat, diagram batang sirkulasi harian interaktif 30 hari, daftar buku terpopuler, dan audit feed realtime.
+- **Alat Scanner Barcode Header**: Akses cepat pemindai barcode / ISBN dari bilah navigasi utama admin.
 - **Tab Manajemen Buku**: Tabel inventaris lengkap dengan pencarian cepat, filter kategori, **Tambah Buku Manual**, **Edit Data Buku**, dan **Hapus Buku**.
 - **Tab Sirkulasi & Peminjaman**: Meja sirkulasi terpusat untuk memproses pengembalian, status keterlambatan, penagihan denda, serta pembebasan denda (*waive fine*).
 - **Tab Direktori Anggota**: Tabel data anggota dengan peran (ADMIN, LIBRARIAN, MEMBER), status (Aktif, Nonaktif), dan modal **Registrasi Anggota Baru**.
@@ -107,7 +142,7 @@ PerpusKita terhubung secara langsung dengan **Google Books API** sebagai penyedi
 - **Tab Laporan & Ekspor**: Rekapitulasi sirkulasi bulanan, indikator mutu, dan fitur **Ekspor CSV / Excel** instan yang mengunduh file `.csv` transaksi secara otomatis.
 - **Tab Pengaturan Sistem**: Konfigurasi parameter perpustakaan (Durasi Pinjam, Denda Keterlambatan per Hari, Maksimal Perpanjangan, Jam Operasional, Kontak).
 
-### 7. Riwayat Peminjaman (`/peminjaman`)
+### 11. Riwayat Peminjaman (`/peminjaman`)
 - Filter status riwayat: *Semua, Dipinjam, Dikembalikan, Terlambat*.
 - Bar pencarian spesifik judul dan pengarang dalam riwayat.
 - Indikator denda keterlambatan dengan tombol **Bayar Denda**.
@@ -147,11 +182,13 @@ npm run db:studio
 - **Framework**: Next.js 14 (App Router)
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS
+- **Animation & Transitions**: Framer Motion (`framer-motion` v14) untuk layout spring transitions, page turns, modal drop, dan scanner laser beam
+- **Audio Feedback**: Web Audio API sintetis untuk umpan balik pemindai barcode meja sirkulasi
 - **Authentication**: Clerk (`@clerk/nextjs` v5)
 - **Database & ORM**: Prisma 5.22.0 (MySQL)
 - **External Integration**: Google Books API v1
 - **Icons**: Lucide React
-- **State Management**: React Context (`LibraryContext`) dengan sinkronisasi instan data peminjaman, ulasan, bookmark, notifikasi, denda, direktori anggota, dan ekspor koleksi.
+- **State Management**: React Context (`LibraryContext`) dengan sinkronisasi instan data peminjaman, ulasan, bookmark, reservasi antrean, notifikasi, denda, direktori anggota, dan ekspor koleksi.
 
 ---
 
