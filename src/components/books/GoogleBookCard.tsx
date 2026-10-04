@@ -7,13 +7,12 @@ import { useLibrary } from '@/context/LibraryContext';
 import { BookPlaceholderCover } from './BookPlaceholderCover';
 import { 
   BookOpen, 
-  ExternalLink, 
   PlusCircle, 
   CheckCircle2, 
   Globe, 
-  ArrowUpRight,
-  Layers
+  ArrowUpRight 
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface GoogleBookCardProps {
   volume: GoogleBookVolume;
@@ -28,8 +27,13 @@ export function GoogleBookCard({ volume, onImportClick }: GoogleBookCardProps) {
   const isInInventory = !!localMatch || volume.inLocalInventory;
 
   return (
-    <div className="group relative flex flex-col bg-white rounded-xl border border-[#E5E6DF] p-3.5 hover:border-[#174C3C]/40 hover:shadow-card transition-all duration-200">
-      
+    <motion.div 
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -5, transition: { duration: 0.22, ease: 'easeOut' } }}
+      transition={{ duration: 0.3 }}
+      className="group relative flex flex-col bg-white rounded-xl border border-[#E5E6DF] p-3.5 hover:border-[#174C3C]/50 hover:shadow-card transition-all"
+    >
       {/* Cover Container */}
       <div className="relative aspect-[3/4.2] w-full overflow-hidden rounded-lg bg-[#EFECE3] mb-3">
         <Link href={`/katalog/gbook/${volume.id}`} className="block w-full h-full">
@@ -37,10 +41,9 @@ export function GoogleBookCard({ volume, onImportClick }: GoogleBookCardProps) {
             <img
               src={volume.thumbnail}
               alt={volume.title}
-              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
               loading="lazy"
               onError={(e) => {
-                // If Google Books image link fails to load, gracefully hide img and show fallback
                 (e.target as HTMLElement).style.display = 'none';
               }}
             />
@@ -95,7 +98,6 @@ export function GoogleBookCard({ volume, onImportClick }: GoogleBookCardProps) {
 
         {/* Card Actions Footer */}
         <div className="mt-3 pt-2.5 border-t border-[#E5E6DF]/60 space-y-2">
-          
           <div className="flex items-center justify-between text-xs">
             <span className="text-[11px] text-[#777D77]">
               {volume.pageCount > 0 ? `${volume.pageCount} Hal` : 'Halaman -'}
@@ -146,11 +148,8 @@ export function GoogleBookCard({ volume, onImportClick }: GoogleBookCardProps) {
               </Link>
             )}
           </div>
-
         </div>
-
       </div>
-
-    </div>
+    </motion.div>
   );
 }

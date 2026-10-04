@@ -58,7 +58,18 @@ export const scaleIn: Variants = {
   }
 };
 
-export const staggerContainer = (staggerChildren = 0.08, delayChildren = 0): Variants => ({
+export const staggerContainer: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.08,
+      delayChildren: 0.05,
+    }
+  }
+};
+
+export const createStaggerContainer = (staggerChildren = 0.08, delayChildren = 0): Variants => ({
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,

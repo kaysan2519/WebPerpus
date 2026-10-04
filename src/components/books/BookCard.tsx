@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Book } from '@/types';
 import { useLibrary } from '@/context/LibraryContext';
 import { Bookmark, Star } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface BookCardProps {
   book: Book;
@@ -16,21 +17,27 @@ export function BookCard({ book, showRating = true }: BookCardProps) {
   const isFav = favorites.includes(book.id);
 
   return (
-    <div className="group relative flex flex-col bg-white rounded-xl border border-[#E5E6DF] p-3.5 hover:border-[#174C3C]/40 hover:shadow-card transition-all duration-200">
-      
+    <motion.div 
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -5, transition: { duration: 0.22, ease: 'easeOut' } }}
+      transition={{ duration: 0.3 }}
+      className="group relative flex flex-col bg-white rounded-xl border border-[#E5E6DF] p-3.5 hover:border-[#174C3C]/50 hover:shadow-card transition-all"
+    >
       {/* Cover Container */}
       <div className="relative aspect-[3/4.2] w-full overflow-hidden rounded-lg bg-[#EFECE3] mb-3">
         <Link href={`/katalog/${book.slug}`} className="block w-full h-full">
           <img
             src={book.coverImage}
             alt={book.title}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
             loading="lazy"
           />
         </Link>
 
         {/* Favorite Bookmark Button */}
-        <button
+        <motion.button
+          whileTap={{ scale: 0.85 }}
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -45,7 +52,7 @@ export function BookCard({ book, showRating = true }: BookCardProps) {
           title={isFav ? 'Hapus dari favorit' : 'Tambah ke favorit'}
         >
           <Bookmark className={`w-3.5 h-3.5 ${isFav ? 'fill-current' : ''}`} />
-        </button>
+        </motion.button>
       </div>
 
       {/* Book Information */}
@@ -81,6 +88,6 @@ export function BookCard({ book, showRating = true }: BookCardProps) {
           )}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
