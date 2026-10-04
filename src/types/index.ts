@@ -151,6 +151,25 @@ export interface FineRecord {
   daysOverdue: number;
   createdAt: string;
   paidAt?: string;
+  paymentMethod?: string;
+  transactionRef?: string;
+}
+
+export type ReservationStatus = 'Menunggu' | 'Siap Diambil' | 'Dibatalkan' | 'Selesai';
+
+export interface ReservationRecord {
+  id: string;
+  bookId: string;
+  bookTitle: string;
+  bookAuthor: string;
+  bookCover: string;
+  userId: string;
+  userName: string;
+  reservationDate: string;
+  estimatedAvailableDate: string;
+  queuePosition: number;
+  status: ReservationStatus;
+  notes?: string;
 }
 
 export type NotificationType = 'INFO' | 'DUE_REMINDER' | 'OVERDUE' | 'RENEW' | 'SUCCESS';
