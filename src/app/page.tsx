@@ -21,6 +21,8 @@ import {
   CheckCircle,
   Award
 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { fadeInUp, fadeIn, staggerContainer } from '@/lib/motion';
 
 export default function HomePage() {
   const router = useRouter();
@@ -63,10 +65,15 @@ export default function HomePage() {
         {/* HERO SECTION */}
         <section className="relative overflow-hidden pt-8 pb-16 lg:py-20 border-b border-[#E5E6DF]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
+            <motion.div 
+              variants={staggerContainer}
+              initial="hidden"
+              animate="visible"
+              className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center"
+            >
               
               {/* Left Column: Editorial Headline & Search */}
-              <div className="lg:col-span-7 space-y-6">
+              <motion.div variants={fadeInUp} className="lg:col-span-7 space-y-6">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#E7EDE5] border border-[#A8B9A4]/40 text-[#174C3C] text-xs font-semibold tracking-wider uppercase">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#174C3C] animate-pulse"></span>
                   Perpustakaan Digital
@@ -118,10 +125,13 @@ export default function HomePage() {
                     </button>
                   ))}
                 </div>
-              </div>
+              </motion.div>
 
               {/* Right Column: Library Photo with Natural Lighting */}
-              <div className="lg:col-span-5 relative">
+              <motion.div 
+                variants={fadeIn}
+                className="lg:col-span-5 relative"
+              >
                 <div className="relative mx-auto max-w-md lg:max-w-none">
                   {/* Decorative subtle border frame */}
                   <div className="relative rounded-2xl overflow-hidden shadow-floating border border-[#E5E6DF] aspect-[4/3] sm:aspect-[5/4] lg:aspect-[4/4.5]">
@@ -146,57 +156,49 @@ export default function HomePage() {
                   </div>
 
                   {/* Floating Mini Badge */}
-                  <div className="absolute -top-4 -right-4 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-[#E5E6DF] shadow-card text-xs font-semibold text-[#174C3C]">
+                  <motion.div 
+                    animate={{ y: [0, -6, 0] }}
+                    transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+                    className="absolute -top-4 -right-4 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-[#E5E6DF] shadow-card text-xs font-semibold text-[#174C3C]"
+                  >
                     <Award className="w-4 h-4 text-[#174C3C]" />
                     <span>Kurasi Mingguan</span>
-                  </div>
+                  </motion.div>
                 </div>
-              </div>
+              </motion.div>
 
-            </div>
+            </motion.div>
 
             {/* 4 Stats Cards matching mockup */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mt-12 sm:mt-16">
-              <div className="bg-white rounded-xl border border-[#E5E6DF] p-4 sm:p-5 flex items-center gap-3.5 shadow-card hover:border-[#174C3C]/40 transition-all">
-                <div className="w-10 h-10 rounded-lg bg-[#E7EDE5] text-[#174C3C] flex items-center justify-center shrink-0">
-                  <BookOpen className="w-5 h-5" />
-                </div>
-                <div>
-                  <div className="text-lg sm:text-xl font-bold text-[#174C3C] font-serif">12.500+</div>
-                  <div className="text-xs text-[#777D77] font-medium">Koleksi Buku</div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-xl border border-[#E5E6DF] p-4 sm:p-5 flex items-center gap-3.5 shadow-card hover:border-[#174C3C]/40 transition-all">
-                <div className="w-10 h-10 rounded-lg bg-[#E7EDE5] text-[#174C3C] flex items-center justify-center shrink-0">
-                  <Users className="w-5 h-5" />
-                </div>
-                <div>
-                  <div className="text-lg sm:text-xl font-bold text-[#174C3C] font-serif">3.200+</div>
-                  <div className="text-xs text-[#777D77] font-medium">Anggota Aktif</div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-xl border border-[#E5E6DF] p-4 sm:p-5 flex items-center gap-3.5 shadow-card hover:border-[#174C3C]/40 transition-all">
-                <div className="w-10 h-10 rounded-lg bg-[#E7EDE5] text-[#174C3C] flex items-center justify-center shrink-0">
-                  <Layers className="w-5 h-5" />
-                </div>
-                <div>
-                  <div className="text-lg sm:text-xl font-bold text-[#174C3C] font-serif">8</div>
-                  <div className="text-xs text-[#777D77] font-medium">Kategori Utama</div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-xl border border-[#E5E6DF] p-4 sm:p-5 flex items-center gap-3.5 shadow-card hover:border-[#174C3C]/40 transition-all">
-                <div className="w-10 h-10 rounded-lg bg-[#E7EDE5] text-[#174C3C] flex items-center justify-center shrink-0">
-                  <Clock className="w-5 h-5" />
-                </div>
-                <div>
-                  <div className="text-lg sm:text-xl font-bold text-[#174C3C] font-serif">24/7</div>
-                  <div className="text-xs text-[#777D77] font-medium">Akses Online</div>
-                </div>
-              </div>
-            </div>
+            <motion.div 
+              variants={staggerContainer}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-50px" }}
+              className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mt-12 sm:mt-16"
+            >
+              {[
+                { icon: BookOpen, val: '12.500+', label: 'Koleksi Buku' },
+                { icon: Users, val: '3.200+', label: 'Anggota Aktif' },
+                { icon: Layers, val: '8', label: 'Kategori Utama' },
+                { icon: Clock, val: '24/7', label: 'Akses Online' },
+              ].map((stat, i) => (
+                <motion.div 
+                  key={i}
+                  variants={fadeInUp}
+                  whileHover={{ y: -4, transition: { duration: 0.2 } }}
+                  className="bg-white rounded-xl border border-[#E5E6DF] p-4 sm:p-5 flex items-center gap-3.5 shadow-card hover:border-[#174C3C]/40 transition-all cursor-default"
+                >
+                  <div className="w-10 h-10 rounded-lg bg-[#E7EDE5] text-[#174C3C] flex items-center justify-center shrink-0">
+                    <stat.icon className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="text-lg sm:text-xl font-bold text-[#174C3C] font-serif">{stat.val}</div>
+                    <div className="text-xs text-[#777D77] font-medium">{stat.label}</div>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
 
           </div>
         </section>
@@ -255,12 +257,22 @@ export default function HomePage() {
         {/* PILIHAN PUSTAKAWAN (EDITORIAL SPOTLIGHT) */}
         <section id="layanan" className="py-16 bg-[#F7F6F2] border-b border-[#E5E6DF]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="bg-white rounded-2xl border border-[#E5E6DF] p-6 sm:p-10 lg:p-12 shadow-editorial">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-80px" }}
+              transition={{ duration: 0.5, ease: 'easeOut' }}
+              className="bg-white rounded-2xl border border-[#E5E6DF] p-6 sm:p-10 lg:p-12 shadow-editorial"
+            >
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
                 
                 {/* Book Cover */}
                 <div className="lg:col-span-4 flex justify-center">
-                  <div className="relative w-48 sm:w-56 aspect-[3/4.4] rounded-xl overflow-hidden shadow-book border border-[#E5E6DF]">
+                  <motion.div 
+                    whileHover={{ scale: 1.03, rotate: -1 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                    className="relative w-48 sm:w-56 aspect-[3/4.4] rounded-xl overflow-hidden shadow-book border border-[#E5E6DF]"
+                  >
                     <img
                       src="https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=700&q=80"
                       alt="Atomic Habits by James Clear"
@@ -269,7 +281,7 @@ export default function HomePage() {
                     <div className="absolute top-3 left-3 px-2.5 py-1 rounded-md bg-[#174C3C] text-white text-[11px] font-semibold">
                       Pilihan Pustakawan
                     </div>
-                  </div>
+                  </motion.div>
                 </div>
 
                 {/* Editorial Content */}
@@ -310,7 +322,7 @@ export default function HomePage() {
                 </div>
 
               </div>
-            </div>
+            </motion.div>
           </div>
         </section>
 
@@ -329,37 +341,46 @@ export default function HomePage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="p-6 rounded-2xl border border-[#E5E6DF] bg-[#F7F6F2]/50 hover:bg-white hover:shadow-editorial transition-all">
-                <div className="w-12 h-12 rounded-xl bg-[#E7EDE5] text-[#174C3C] flex items-center justify-center mb-4">
-                  <Compass className="w-6 h-6" />
-                </div>
-                <h3 className="font-semibold text-base text-[#174C3C]">Peminjaman Mandiri</h3>
-                <p className="text-xs sm:text-sm text-[#777D77] mt-2 leading-relaxed">
-                  Pinjam buku fisik atau reservasi judul favorit hanya dengan beberapa ketukan dari perangkat Anda.
-                </p>
-              </div>
-
-              <div className="p-6 rounded-2xl border border-[#E5E6DF] bg-[#F7F6F2]/50 hover:bg-white hover:shadow-editorial transition-all">
-                <div className="w-12 h-12 rounded-xl bg-[#E7EDE5] text-[#174C3C] flex items-center justify-center mb-4">
-                  <BookMarked className="w-6 h-6" />
-                </div>
-                <h3 className="font-semibold text-base text-[#174C3C]">Ruang Baca & Arsip Terbuka</h3>
-                <p className="text-xs sm:text-sm text-[#777D77] mt-2 leading-relaxed">
-                  Akses ruang baca hening dengan pencahayaan alami, koneksi serat optik, dan rak literatur terbuka.
-                </p>
-              </div>
-
-              <div className="p-6 rounded-2xl border border-[#E5E6DF] bg-[#F7F6F2]/50 hover:bg-white hover:shadow-editorial transition-all">
-                <div className="w-12 h-12 rounded-xl bg-[#E7EDE5] text-[#174C3C] flex items-center justify-center mb-4">
-                  <Sparkles className="w-6 h-6" />
-                </div>
-                <h3 className="font-semibold text-base text-[#174C3C]">Diskusi & Klub Baca</h3>
-                <p className="text-xs sm:text-sm text-[#777D77] mt-2 leading-relaxed">
-                  Temu wicara buku bulanan, bedah karya penulis nasional, dan komunitas literasi yang saling menginspirasi.
-                </p>
-              </div>
-            </div>
+            <motion.div 
+              variants={staggerContainer}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-60px" }}
+              className="grid grid-cols-1 md:grid-cols-3 gap-8"
+            >
+              {[
+                {
+                  icon: Compass,
+                  title: 'Peminjaman Mandiri',
+                  desc: 'Pinjam buku fisik atau reservasi judul favorit hanya dengan beberapa ketukan dari perangkat Anda.'
+                },
+                {
+                  icon: BookMarked,
+                  title: 'Ruang Baca & Arsip Terbuka',
+                  desc: 'Akses ruang baca hening dengan pencahayaan alami, koneksi serat optik, dan rak literatur terbuka.'
+                },
+                {
+                  icon: Sparkles,
+                  title: 'Diskusi & Klub Baca',
+                  desc: 'Temu wicara buku bulanan, bedah karya penulis nasional, dan komunitas literasi yang saling menginspirasi.'
+                }
+              ].map((item, idx) => (
+                <motion.div 
+                  key={idx}
+                  variants={fadeInUp}
+                  whileHover={{ y: -6, transition: { duration: 0.2 } }}
+                  className="p-6 rounded-2xl border border-[#E5E6DF] bg-[#F7F6F2]/50 hover:bg-white hover:shadow-editorial transition-all"
+                >
+                  <div className="w-12 h-12 rounded-xl bg-[#E7EDE5] text-[#174C3C] flex items-center justify-center mb-4">
+                    <item.icon className="w-6 h-6" />
+                  </div>
+                  <h3 className="font-semibold text-base text-[#174C3C]">{item.title}</h3>
+                  <p className="text-xs sm:text-sm text-[#777D77] mt-2 leading-relaxed">
+                    {item.desc}
+                  </p>
+                </motion.div>
+              ))}
+            </motion.div>
           </div>
         </section>
 
