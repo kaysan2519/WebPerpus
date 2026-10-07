@@ -85,6 +85,20 @@ export function Navbar() {
 
           {/* Right Action Icons & Role Access */}
           <div className="flex items-center gap-2 sm:gap-3">
+            {/* AI Consultation Trigger Button */}
+            <button
+              onClick={() => {
+                if (typeof window !== 'undefined') {
+                  window.dispatchEvent(new CustomEvent('open-perpus-ai-chat'));
+                }
+              }}
+              className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#E7EDE5]/80 hover:bg-[#174C3C] text-[#174C3C] hover:text-white transition-all text-xs font-semibold border border-[#A8B9A4]/40 group"
+              title="Konsultasi Pustakawan AI (Ketik 'konsul')"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-500 group-hover:text-amber-300 animate-pulse" />
+              <span>Konsul AI</span>
+            </button>
+
             {/* Quick Search Trigger */}
             <button
               onClick={() => setSearchModalOpen(true)}
@@ -297,6 +311,22 @@ export function Navbar() {
                   <span>Dashboard Admin</span>
                   <ShieldCheck className="w-4 h-4 text-[#A8B9A4]" />
                 </Link>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    if (typeof window !== 'undefined') {
+                      window.dispatchEvent(new CustomEvent('open-perpus-ai-chat'));
+                    }
+                  }}
+                  className="px-4 py-2.5 rounded-lg text-sm font-medium text-[#174C3C] bg-[#E7EDE5] border border-[#A8B9A4]/30 flex items-center justify-between text-left"
+                >
+                  <span className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-amber-600" />
+                    Konsultasi Pustakawan AI (Key)
+                  </span>
+                  <span className="text-xs bg-white text-[#174C3C] px-2 py-0.5 rounded font-mono font-bold">Chat</span>
+                </button>
               </div>
             </motion.div>
           )}
