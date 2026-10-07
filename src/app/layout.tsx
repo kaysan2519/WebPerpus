@@ -4,6 +4,7 @@ import { Inter, Manrope, Playfair_Display } from 'next/font/google';
 import './globals.css';
 import { LibraryProvider } from '@/context/LibraryContext';
 import { ToastContainer } from '@/components/ui/ToastContainer';
+import { AILibrarianChatbot } from '@/components/chat/AILibrarianChatbot';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -40,8 +41,9 @@ export default function RootLayout({
       <body className="min-h-screen bg-[#F7F6F2] text-[#252925] flex flex-col font-sans selection:bg-forest/15 selection:text-forest">
         <ClerkProvider>
           <LibraryProvider>
-          {children}
-          <ToastContainer />
+            {children}
+            <ToastContainer />
+            <AILibrarianChatbot />
           </LibraryProvider>
         </ClerkProvider>
       </body>
